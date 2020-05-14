@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <title>OneV&#39;s Den</title>
+  <meta name="description" content="嗨，我是王巍 (@onevcat)，一名 iOS 开发者。">
+  <meta name="author" content="Wei Wang">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="OneV&#39;s Den">
+  <meta name="twitter:description" content="嗨，我是王巍 (@onevcat)，一名 iOS 开发者。">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="OneV&#39;s Den">
+  <meta property="og:description" content="嗨，我是王巍 (@onevcat)，一名 iOS 开发者。">
+  
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
+  <link href="/assets/images/favicon.png" rel="shortcut icon" type="image/png">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="canonical" href="http://localhost:4000/">
+  <link rel="alternate" type="application/rss+xml" title="OneV's Den" href="http://localhost:4000/feed.xml">
+  
+  <meta name="google-site-verification" content="1-1ZlHoRvM0T2FqPbW2S-qLgYXN6rsn52kErlMPd_gw" />
+  
+</head>
+
+
+  <body>
+
+    <span class="mobile btn-mobile-menu">
+        <i class="fa fa-list btn-mobile-menu__icon"></i>
+        <i class="fa fa-angle-up btn-mobile-close__icon hidden"></i>
+    </span>
+    
+    <header class="panel-cover " style="background-image: url('/assets/images/background-cover.jpg')">
+  <div class="panel-main">
+
+    <div class="panel-main__inner panel-inverted">
+    <div class="panel-main__content">
+
+        <a href="/#blog" title="前往 OneV's Den 的主页" class="blog-button"><img src="/assets/images/avatar.jpg" width="80" alt="OneV's Den logo" class="panel-cover__logo logo" /></a>
+        <h1 class="panel-cover__title panel-title"><a href="/#blog" title="link to homepage for OneV's Den" class="blog-button">OneV's Den</a></h1>
+
+        
+        <span class="panel-cover__subtitle panel-subtitle">上善若水，人淡如菊</span>
+        
+        <hr class="panel-cover__divider" />
+        <p class="panel-cover__description">嗨，我是王巍 (@onevcat)，一名 iOS 开发者。</p>
+        <hr class="panel-cover__divider panel-cover__divider--secondary" />
+        
+        
+        <p class="panel-cover__description"><a href="https://objccn.io/products/">我组织的 ObjC 中国与 objc.io 合作发布了一系列 iOS/Swift 相关图书，欢迎访问了解更多</a></p>
+        
+        
+        <div class="navigation-wrapper">
+          <div>
+            <nav class="cover-navigation cover-navigation--primary">
+              <ul class="navigation">
+                <li class="navigation__item"><a href="/#blog" title="访问博客" class="blog-button">博客</a></li>
+                
+                  <li class="navigation__item"><a href="//onev.cat" target="_blank" title="我的简历">简历</a></li>
+                
+                  <li class="navigation__item"><a href="/apps" target="_blank" title="我所使用的 app 们">工具</a></li>
+                
+              </ul>
+            </nav>
+          </div>
+          
+          <div><nav class="cover-navigation navigation--social">
+  <ul class="navigation">
+
+  
+  <!-- Weibo -->
+  <li class="navigation__item">
+    <a href="http://weibo.com/onevcat" title="@onevcat 的微博" target="_blank">
+      <i class='social fa fa-weibo'></i>
+      <span class="label">Weibo</span>
+    </a>
+  </li>
+  
+
+  
+  <!-- Github -->
+  <li class="navigation__item">
+    <a href="https://github.com/onevcat" title="@onevcat 的 Github" target="_blank">
+      <i class='social fa fa-github'></i>
+      <span class="label">Github</span>
+    </a>
+  </li>
+  
+  
+  
+  <!-- Twitter -->
+  <li class="navigation__item">
+    <a href="http://twitter.com/onevcat" title="@onevcat" target="_blank">
+      <i class='social fa fa-twitter'></i>
+      <span class="label">Twitter</span>
+    </a>
+  </li>
+  
+
+  
+
+  <!-- RSS -->
+  <li class="navigation__item">
+    <a href="/feed.xml" rel="author" title="RSS" target="_blank">
+      <i class='social fa fa-rss'></i>
+      <span class="label">RSS</span>
+    </a>
+  </li>
+
+  
+  <!-- Email -->
+  <li class="navigation__item">
+    <a href="mailto:onev@onevcat.com" title="Contact me">
+      <i class='social fa fa-envelope'></i>
+      <span class="label">Email</span>
+    </a>
+  </li>
+  
+
+  </ul>
+</nav>
+</div>
+        </div>
+      </div>
+    </div>
+    
+    
+    <div class="panel-cover--overlay cover-blue"></div>
+    
+  </div>
+</header>
+
+
+    <div class="content-wrapper">
+        <div class="content-wrapper__inner">
+            <div class="main-post-list hidden">
+
+  <ol class="post-list">
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2020/03/improve-delegate/" title="访问 使用 protocol 和 callAsFunction 改进 Delegate">使用 protocol 和 callAsFunction 改进 Delegate</a></h2>
+      <p class="excerpt">2018 年 3 月的时候我写过一篇在 Swift 中如何改进 Delegate Pattern 的文章，主要思想是用遮蔽变量 (shadow variable) 声明的方式，来保证 self 变量可以被常时地标记为 weak。本文中，为了保证没有看过原文的读者能处在同一频道，我会先 (再次) 简单介绍一下这种方法。然后，结合 Swift 5.2 的新特性提出一些小的改进方式。Delegate简单说，为了避免繁琐老式的 protocol 定义和实现，我们可能更倾向于选择提供闭包的方式完成回...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2020-03-12 09:00:00 +0800" class="post-list__meta--date date">2020-03-12</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2020/03/improve-delegate/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2020/01/customize-publisher/" title="访问 在 Combine 中实现自定义 Publisher">在 Combine 中实现自定义 Publisher</a></h2>
+      <p class="excerpt">  本文是对我的《SwiftUI 和 Combine 编程》书籍的补充，对一些虽然很重要，但和书中上下文内容相去略远，或者一些不太适合以书本的篇幅详细展开解释的内容进行了追加说明。如果你对 SwiftUI 和 Combine 的更多话题有兴趣的话，可以考虑参阅原书。上一篇文章里，我们探索了 Combine 里对 back pressure 的处理。在那边，主要涉及到的是实现自定义的 Subscriber，来通过控制事件流终端的 pull 行为，实现合理的 back pressure 机制。...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2020-01-20 09:00:00 +0800" class="post-list__meta--date date">2020-01-20</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2020/01/customize-publisher/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2019/12/2019-final/" title="访问 2019 年终总结">2019 年终总结</a></h2>
+      <p class="excerpt">距离上一次写年终总结已经过去四年时间了。在人生中带上两个小朋友以后，远游这种事情的难度就高企不下了。一年里除了工作以外，活动的轨迹多半也都落在了以家为圆心两公里为半径的圆周里。看着小朋友们一天天长大，在被她们的想象力和好奇心折服的同时，也不可避免地感觉到了自己的“成熟”…嗯，或者直白些，不可避免地感觉到了自己在变老。对我来说，2019 年是很有意思的一年，它是充满“矛盾”的一年。我能认知的世界在变大，但我实际生活的圈子却在变小。世界的变动非常剧烈，在中美争霸背景下，被时代洪流的裹挟向前的我...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2019-12-31 13:22:00 +0800" class="post-list__meta--date date">2019-12-31</time> &#8226; <span class="post-list__meta--tags tags">胡言乱语集</span><a class="btn-border-small" href=/2019/12/2019-final/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2019/12/backpressure-in-combine/" title="访问 关于 Backpressure 和 Combine 中的处理">关于 Backpressure 和 Combine 中的处理</a></h2>
+      <p class="excerpt">  本文是对我的《SwiftUI 和 Combine 编程》书籍的补充，对一些虽然很重要，但和书中上下文内容相去略远，或者一些不太适合以书本的篇幅详细展开解释的内容进行了追加说明。如果你对 SwiftUI 和 Combine 的更多话题有兴趣的话，可以考虑参阅原书。Combine 在 API 设计上很多地方都参考了 Rx 系，特别是 RxSwift 的做法。如果你已经对响应式编程很了解的话，从 RxSwift 迁移到 Combine 应该是轻而易举的。如果要说起 RxSwift 和 Com...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2019-12-01 11:32:00 +0800" class="post-list__meta--date date">2019-12-01</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2019/12/backpressure-in-combine/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2019/06/swift-ui-firstlook-2/" title="访问 SwiftUI 的一些初步探索 (二)">SwiftUI 的一些初步探索 (二)</a></h2>
+      <p class="excerpt">  我已经计划写一本关于 SwiftUI 和 Combine 编程的书籍，希望能通过一些实践案例帮助您快速上手 SwiftUI 及 Combine 响应式编程框架，掌握下一代客户端 UI 开发技术。现在这本书已经开始预售，预计能在 10 月左右完成。如果您对此有兴趣，可以查看 ObjC 中国的产品页面了解详情及购买。十分感谢！接上一篇继续对 SwiftUI 的教程进行一些解读。教程 2 - Building Lists and NavigationSection 4 - Step 2: 静...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2019-06-11 11:32:00 +0800" class="post-list__meta--date date">2019-06-11</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2019/06/swift-ui-firstlook-2/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2019/06/swift-ui-firstlook/" title="访问 SwiftUI 的一些初步探索 (一)">SwiftUI 的一些初步探索 (一)</a></h2>
+      <p class="excerpt">  我已经计划写一本关于 SwiftUI 和 Combine 编程的书籍，希望能通过一些实践案例帮助您快速上手 SwiftUI 及 Combine 响应式编程框架，掌握下一代客户端 UI 开发技术。现在这本书已经开始预售，预计能在 10 月左右完成。如果您对此有兴趣，可以查看 ObjC 中国的产品页面了解详情及购买。十分感谢！总览如果你想要入门 SwiftUI 的使用，那 Apple 这次给出的官方教程绝对给力。这个教程提供了非常详尽的步骤和说明，网页的交互也是一流，是觉得值得看和动手学习...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2019-06-04 14:32:00 +0800" class="post-list__meta--date date">2019-06-04</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2019/06/swift-ui-firstlook/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2019/02/swift-abi/" title="访问 Swift ABI 稳定对我们到底意味着什么">Swift ABI 稳定对我们到底意味着什么</a></h2>
+      <p class="excerpt">Swift 社区最近最重大的新闻应该就是 ABI 稳定了。这个话题虽然已经讨论了有一阵子了，但随着 Xcode 10.2 beta 的迭代和 Swift 5 的 release 被提上日程，最终 Swift ABI 稳定能做到什么程度，我们开发者能做些什么，需要做些什么，就变成了一个重要的话题。Apple 在这个月接连发布了 ABI Stability and More 和 Evolving Swift On Apple Platforms After ABI Stability 两篇文章...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2019-02-21 09:28:00 +0800" class="post-list__meta--date date">2019-02-21</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2019/02/swift-abi/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2018/12/jose-3/" title="访问 与 JOSE 战斗的日子 - 写给 iOS 开发者的密码学入门手册 (实践)">与 JOSE 战斗的日子 - 写给 iOS 开发者的密码学入门手册 (实践)</a></h2>
+      <p class="excerpt">概述这是关于 JOSE 和密码学的三篇系列文章中的最后一篇，你可以在下面的链接中找到其他部分：  基础 - 什么是 JWT 以及 JOSE  理论 - JOSE 中的签名和验证流程  实践 - 如何使用 Security.framework 处理 JOSE 中的验证 (本文)这一篇中，我们会在 JOSE 基础篇和理论篇的知识架构上，使用 iOS (或者说 Cocoa) 的相关框架来完成对 JWT 的解析，并利用 JWK 对它的签名进行验证。在最后，我会给出一些我自己在实现和学习这些内容时的...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2018-12-07 09:28:00 +0800" class="post-list__meta--date date">2018-12-07</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2018/12/jose-3/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2018/12/jose-2/" title="访问 与 JOSE 战斗的日子 - 写给 iOS 开发者的密码学入门手册 (理论)">与 JOSE 战斗的日子 - 写给 iOS 开发者的密码学入门手册 (理论)</a></h2>
+      <p class="excerpt">概述这是关于 JOSE 和密码学的三篇系列文章中的第二篇，你可以在下面的链接中找到其他部分：  基础 - 什么是 JWT 以及 JOSE  理论 - JOSE 中的签名和验证流程 (本文)  实践 - 如何使用 Security.framework 处理 JOSE 中的验证这一篇中，主要介绍网络传输的密钥的编码和处理方法，以及进行数字签名和验证的基本流程。我们在之后实践一篇里，会使用到这些知识。密钥的表现形式显然 JWK 是一种密钥的表现形式，它使用 JSON 的方式，遵守 JWA 的参数...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2018-12-05 08:38:00 +0800" class="post-list__meta--date date">2018-12-05</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2018/12/jose-2/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2018/12/jose-1/" title="访问 与 JOSE 战斗的日子 - 写给 iOS 开发者的密码学入门手册 (基础)">与 JOSE 战斗的日子 - 写给 iOS 开发者的密码学入门手册 (基础)</a></h2>
+      <p class="excerpt">概述事情的缘由很简单，工作上在做 LINE SDK 的开发，在拿 token 的时候有一步额外的验证：从 Server 会发回一个 JWT (JSON Web Token)，客户端需要对这个 JWT 进行签名和内容的验证，以确保信息没有被人篡改。Server 在签名中使用的算法类型会在 JWT 中写明，验证签名所需要的公钥 ID 也可以在 JWT 中找到。这个公钥是以 JWK (JSON Web Key) 的形式公开，客户端拿到 JWK 后即可在本地对收到的 JWT 进行验证。用一张图的话...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2018-12-03 09:38:00 +0800" class="post-list__meta--date date">2018-12-03</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2018/12/jose-1/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+  </ol>
+
+  <hr class="post-list__divider " />
+
+<nav class="pagination" role="navigation">
+    
+    <span class="pagination__page-number">1 / 13</span>
+    
+        <a class="older-posts pagination__older btn btn-small btn-tertiary" href="/page/2/#blog">更早 &rarr;</a>
+    
+</nav>
+
+
+</div>
+
+            <section class="footer">
+    <footer>
+    	<span class="footer__copyright">本站点采用<a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">知识共享 署名-非商业性使用-相同方式共享 4.0 国际 许可协议</a></span>
+        <span class="footer__copyright">由 <a href="https://jekyllrb.com">Jekyll</a> 于 2020-05-14 生成</span>
+        <span class="footer__copyright">本站由 <a href="https://onev.cat">@onevcat</a> 创建，采用 <a href="https://github.com/onevcat/vno-jekyll">Vno - Jekyll</a> 作为主题，您可以在 GitHub 找到<a href="https://github.com/onevcat/OneV-s-Den">本站源码</a> - &copy; 2020</span>
+    </footer>
+</section>
+
+        </div>
+    </div>
+    
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+
+
+
+<script type="text/javascript" src="/js/main.js"></script>
+
+
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-25719337-1', 'onevcat.com');
+    ga('send', 'pageview');
+</script>
+
+
+    
+  </body>
+
+</html>

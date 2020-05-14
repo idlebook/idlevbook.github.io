@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <title>面向协议编程与 Cocoa 的邂逅 (下)</title>
+  <meta name="description" content="本文是笔者在 MDCC 16 (移动开发者大会) 上 iOS 专场中的主题演讲的文字整理。您可以在这里找到演讲使用的 Keynote，部分示例代码可以在 MDCC 2016 的官方 repo 中找到。">
+  <meta name="author" content="Wei Wang">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="面向协议编程与 Cocoa 的邂逅 (下)">
+  <meta name="twitter:description" content="本文是笔者在 MDCC 16 (移动开发者大会) 上 iOS 专场中的主题演讲的文字整理。您可以在这里找到演讲使用的 Keynote，部分示例代码可以在 MDCC 2016 的官方 repo 中找到。">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="面向协议编程与 Cocoa 的邂逅 (下)">
+  <meta property="og:description" content="本文是笔者在 MDCC 16 (移动开发者大会) 上 iOS 专场中的主题演讲的文字整理。您可以在这里找到演讲使用的 Keynote，部分示例代码可以在 MDCC 2016 的官方 repo 中找到。">
+  
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
+  <link href="/assets/images/favicon.png" rel="shortcut icon" type="image/png">
+  
+  <link rel="stylesheet" href="/css/main.css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="canonical" href="http://localhost:4000/2016/12/pop-cocoa-2/">
+  <link rel="alternate" type="application/rss+xml" title="OneV's Den" href="http://localhost:4000/feed.xml">
+  
+  <meta name="google-site-verification" content="1-1ZlHoRvM0T2FqPbW2S-qLgYXN6rsn52kErlMPd_gw" />
+  
+</head>
+
+
+  <body>
+
+    <span class="mobile btn-mobile-menu">
+        <i class="fa fa-list btn-mobile-menu__icon"></i>
+        <i class="fa fa-angle-up btn-mobile-close__icon hidden"></i>
+    </span>
+    
+    <header class="panel-cover panel-cover--collapsed" style="background-image: url('/assets/images/background-cover.jpg')">
+  <div class="panel-main">
+
+    <div class="panel-main__inner panel-inverted">
+    <div class="panel-main__content">
+
+        <a href="/#blog" title="前往 OneV's Den 的主页" class="blog-button"><img src="/assets/images/avatar.jpg" width="80" alt="OneV's Den logo" class="panel-cover__logo logo" /></a>
+        <h1 class="panel-cover__title panel-title"><a href="/#blog" title="link to homepage for OneV's Den" class="blog-button">OneV's Den</a></h1>
+
+        
+        <span class="panel-cover__subtitle panel-subtitle">上善若水，人淡如菊</span>
+        
+        <hr class="panel-cover__divider" />
+        <p class="panel-cover__description">嗨，我是王巍 (@onevcat)，一名 iOS 开发者。</p>
+        <hr class="panel-cover__divider panel-cover__divider--secondary" />
+        
+        
+        <p class="panel-cover__description"><a href="https://objccn.io/products/">我组织的 ObjC 中国与 objc.io 合作发布了一系列 iOS/Swift 相关图书，欢迎访问了解更多</a></p>
+        
+        
+        <div class="navigation-wrapper">
+          <div>
+            <nav class="cover-navigation cover-navigation--primary">
+              <ul class="navigation">
+                <li class="navigation__item"><a href="/#blog" title="访问博客" class="blog-button">博客</a></li>
+                
+                  <li class="navigation__item"><a href="//onev.cat" target="_blank" title="我的简历">简历</a></li>
+                
+                  <li class="navigation__item"><a href="/apps" target="_blank" title="我所使用的 app 们">工具</a></li>
+                
+              </ul>
+            </nav>
+          </div>
+          
+          <div><nav class="cover-navigation navigation--social">
+  <ul class="navigation">
+
+  
+  <!-- Weibo -->
+  <li class="navigation__item">
+    <a href="http://weibo.com/onevcat" title="@onevcat 的微博" target="_blank">
+      <i class='social fa fa-weibo'></i>
+      <span class="label">Weibo</span>
+    </a>
+  </li>
+  
+
+  
+  <!-- Github -->
+  <li class="navigation__item">
+    <a href="https://github.com/onevcat" title="@onevcat 的 Github" target="_blank">
+      <i class='social fa fa-github'></i>
+      <span class="label">Github</span>
+    </a>
+  </li>
+  
+  
+  
+  <!-- Twitter -->
+  <li class="navigation__item">
+    <a href="http://twitter.com/onevcat" title="@onevcat" target="_blank">
+      <i class='social fa fa-twitter'></i>
+      <span class="label">Twitter</span>
+    </a>
+  </li>
+  
+
+  
+
+  <!-- RSS -->
+  <li class="navigation__item">
+    <a href="/feed.xml" rel="author" title="RSS" target="_blank">
+      <i class='social fa fa-rss'></i>
+      <span class="label">RSS</span>
+    </a>
+  </li>
+
+  
+  <!-- Email -->
+  <li class="navigation__item">
+    <a href="mailto:onev@onevcat.com" title="Contact me">
+      <i class='social fa fa-envelope'></i>
+      <span class="label">Email</span>
+    </a>
+  </li>
+  
+
+  </ul>
+</nav>
+</div>
+        </div>
+      </div>
+    </div>
+    
+    
+    <div class="panel-cover--overlay cover-blue"></div>
+    
+  </div>
+</header>
+
+
+    <div class="content-wrapper">
+        <div class="content-wrapper__inner">
+            <article class="post-container post-container--single" itemscope itemtype="http://schema.org/BlogPosting">
+  <header class="post-header">
+    <div class="post-meta">
+      <time datetime="2016-12-01 10:22:11 +0800" itemprop="datePublished" class="post-meta__date date">2016-12-01</time> &#8226; <span class="post-meta__tags tags">能工巧匠集</span>
+    </div>
+    <h1 class="post-title">面向协议编程与 Cocoa 的邂逅 (下)</h1>
+  </header>
+
+  <section class="post">
+    <p>本文是笔者在 MDCC 16 (移动开发者大会) 上 iOS 专场中的主题演讲的文字整理。您可以在<a href="https://speakerdeck.com/onevcat/mian-xiang-xie-yi-bian-cheng-yu-cocoa-de-xie-hou">这里</a>找到演讲使用的 Keynote，部分示例代码可以在 MDCC 2016 的<a href="https://github.com/MDCC2016/ProtocolNetwork">官方 repo</a> 中找到。</p>
+
+<p>在<a href="/2016/11/pop-cocoa-1/">上半部分</a>主要介绍了一些理论方面的内容，包括面向对象编程存在的问题，面向协议的基本概念和决策模型等。本文 (下) 主要展示了一些笔者日常使用面向协议思想和 Cocoa 开发结合的示例代码，并对其进行了一些解说。</p>
+
+<h2 id="转热恋---在日常开发中使用协议">转・热恋 - 在日常开发中使用协议</h2>
+
+<p>WWDC 2015 在 POP 方面有一个非常优秀的主题演讲：<a href="https://developer.apple.com/videos/play/wwdc2015/408/">#408 Protocol-Oriented Programming in Swift</a>。Apple 的工程师通过举了画图表和排序两个例子，来阐释 POP 的思想。我们可以使用 POP 来解耦，通过组合的方式让代码有更好的重用性。不过在 #408 中，涉及的内容偏向理论，而我们每天的 app 开发更多的面临的还是和 Cocoa 框架打交道。在看过 #408 以后，我们就一直在思考，如何把 POP 的思想运用到日常的开发中？</p>
+
+<p>我们在这个部分会举一个实际的例子，来看看 POP 是如何帮助我们写出更好的代码的。</p>
+
+<h3 id="基于-protocol-的网络请求">基于 Protocol 的网络请求</h3>
+
+<p>网络请求层是实践 POP 的一个理想场所。我们在接下的例子中将从零开始，用最简单的面向协议的方式先构建一个不那么完美的网络请求和模型层，它可能包含一些不合理的设计和耦合，但是却是初步最容易得到的结果。然后我们将逐步捋清各部分的所属，并用分离职责的方式来进行重构。最后我们会为这个网络请求层进行测试。通过这个例子，我希望能够设计出包括类型安全，解耦合，易于测试和良好的扩展性等诸多优秀特性在内的 POP 代码。</p>
+
+<blockquote>
+  <p>Talk is cheap, show me the code.</p>
+</blockquote>
+
+<h4 id="初步实现">初步实现</h4>
+
+<p>首先，我们想要做的事情是从一个 API 请求一个 JSON，然后将它转换为 Swift 中可用的实例。作为例子的 API 非常简单，你可以直接访问 <a href="https://api.onevcat.com/users/onevcat">https://api.onevcat.com/users/onevcat</a> 来查看返回：</p>
+
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span><span class="dl">"</span><span class="s2">onevcat</span><span class="dl">"</span><span class="p">,</span><span class="dl">"</span><span class="s2">message</span><span class="dl">"</span><span class="p">:</span><span class="dl">"</span><span class="s2">Welcome to MDCC 16!</span><span class="dl">"</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>我们可以新建一个项目，并添加 <code class="highlighter-rouge">User.swift</code> 来作为模型：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// User.swift</span>
+<span class="kd">import</span> <span class="kt">Foundation</span>
+
+<span class="kd">struct</span> <span class="kt">User</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">let</span> <span class="nv">message</span><span class="p">:</span> <span class="kt">String</span>
+    
+    <span class="nf">init</span><span class="p">?(</span><span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">guard</span> <span class="k">let</span> <span class="nv">obj</span> <span class="o">=</span> <span class="k">try</span><span class="p">?</span> <span class="kt">JSONSerialization</span><span class="o">.</span><span class="nf">jsonObject</span><span class="p">(</span><span class="nv">with</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span> <span class="nv">options</span><span class="p">:</span> <span class="p">[])</span> <span class="k">as?</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kc">nil</span>
+        <span class="p">}</span>
+        <span class="k">guard</span> <span class="k">let</span> <span class="nv">name</span> <span class="o">=</span> <span class="n">obj</span><span class="p">?[</span><span class="s">"name"</span><span class="p">]</span> <span class="k">as?</span> <span class="kt">String</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kc">nil</span>
+        <span class="p">}</span>
+        <span class="k">guard</span> <span class="k">let</span> <span class="nv">message</span> <span class="o">=</span> <span class="n">obj</span><span class="p">?[</span><span class="s">"message"</span><span class="p">]</span> <span class="k">as?</span> <span class="kt">String</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kc">nil</span>
+        <span class="p">}</span>
+        
+        <span class="k">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">User.init(data:)</code> 将输入的数据 (从网络请求 API 获取) 解析为 JSON 对象，然后从中取出 <code class="highlighter-rouge">name</code> 和 <code class="highlighter-rouge">message</code>，并构建代表 API 返回的 <code class="highlighter-rouge">User</code> 实例，非常简单。</p>
+
+<p>现在让我们来看看有趣的部分，也就是如何使用 POP 的方式从 URL 请求数据，并生成对应的 <code class="highlighter-rouge">User</code>。首先，我们可以创建一个 protocol 来代表请求。对于一个请求，我们需要知道它的请求路径，HTTP 方法，所需要的参数等信息。一开始这个协议可能是这样的：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">enum</span> <span class="kt">HTTPMethod</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="kt">GET</span>
+    <span class="k">case</span> <span class="kt">POST</span>
+<span class="p">}</span>
+
+<span class="kd">protocol</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">host</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    <span class="k">var</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    
+    <span class="k">var</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    <span class="k">var</span> <span class="nv">parameter</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>将 <code class="highlighter-rouge">host</code> 和 <code class="highlighter-rouge">path</code> 拼接起来可以得到我们需要请求的 API 地址。为了简化，<code class="highlighter-rouge">HTTPMethod</code> 现在只包含了 <code class="highlighter-rouge">GET</code> 和 <code class="highlighter-rouge">POST</code> 两种请求方式，而在我们的例子中，我们只会使用到 <code class="highlighter-rouge">GET</code> 请求。</p>
+
+<p>现在，可以新建一个 <code class="highlighter-rouge">UserRequest</code> 来实现 <code class="highlighter-rouge">Request</code> 协议：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">struct</span> <span class="kt">UserRequest</span><span class="p">:</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span>
+    
+    <span class="k">let</span> <span class="nv">host</span> <span class="o">=</span> <span class="s">"https://api.onevcat.com"</span>
+    <span class="k">var</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="s">"/users/</span><span class="se">\(</span><span class="n">name</span><span class="se">)</span><span class="s">"</span>
+    <span class="p">}</span>
+    <span class="k">let</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span> <span class="o">=</span> <span class="o">.</span><span class="kt">GET</span>
+    <span class="k">let</span> <span class="nv">parameter</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[:]</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">UserRequest</code> 中有一个未定义初始值的 <code class="highlighter-rouge">name</code> 属性，其他的属性都是为了满足协议所定义的。因为请求的参数用户名 <code class="highlighter-rouge">name</code> 会通过 URL 进行传递，所以 <code class="highlighter-rouge">parameter</code> 是一个空字典就足够了。有了协议定义和一个满足定义的具体请求，现在我们需要发送请求。为了任意请求都可以通过同样的方法发送，我们将发送的方法定义在 <code class="highlighter-rouge">Request</code> 协议扩展上：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">extension</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="nf">send</span><span class="p">(</span><span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">User</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// ... send 的实现</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>在 <code class="highlighter-rouge">send(handler:)</code> 的参数中，我们定义了可逃逸的 <code class="highlighter-rouge">(User?) -&gt; Void</code>，在请求完成后，我们调用这个 <code class="highlighter-rouge">handler</code> 方法来通知调用者请求是否完成，如果一切正常，则将一个 <code class="highlighter-rouge">User</code> 实例传回，否则传回 <code class="highlighter-rouge">nil</code>。</p>
+
+<p>我们想要这个 <code class="highlighter-rouge">send</code> 方法对于所有的 <code class="highlighter-rouge">Request</code> 都通用，所以显然回调的参数类型不能是 <code class="highlighter-rouge">User</code>。通过在 <code class="highlighter-rouge">Request</code> 协议中添加一个关联类型，我们可以将回调参数进行抽象。在 <code class="highlighter-rouge">Request</code> 最后添加：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="o">...</span>
+    <span class="kd">associatedtype</span> <span class="kt">Response</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>然后在 <code class="highlighter-rouge">UserRequest</code> 中，我们也相应地添加类型定义，以满足协议：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">struct</span> <span class="kt">UserRequest</span><span class="p">:</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="o">...</span>
+    <span class="kd">typealias</span> <span class="kt">Response</span> <span class="o">=</span> <span class="kt">User</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>现在，我们来重新实现 <code class="highlighter-rouge">send</code> 方法，现在，我们可以用 <code class="highlighter-rouge">Response</code> 代替具体的 <code class="highlighter-rouge">User</code>，让 <code class="highlighter-rouge">send</code> 一般化。我们这里使用 <code class="highlighter-rouge">URLSession</code> 来发送请求：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">extension</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="nf">send</span><span class="p">(</span><span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Response</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">let</span> <span class="nv">url</span> <span class="o">=</span> <span class="kt">URL</span><span class="p">(</span><span class="nv">string</span><span class="p">:</span> <span class="n">host</span><span class="o">.</span><span class="nf">appending</span><span class="p">(</span><span class="n">path</span><span class="p">))</span><span class="o">!</span>
+        <span class="k">var</span> <span class="nv">request</span> <span class="o">=</span> <span class="kt">URLRequest</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">rawValue</span>
+        
+        <span class="c1">// 在示例中我们不需要 `httpBody`，实践中可能需要将 parameter 转为 data</span>
+        <span class="c1">// request.httpBody = ...</span>
+        
+        <span class="k">let</span> <span class="nv">task</span> <span class="o">=</span> <span class="kt">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">dataTask</span><span class="p">(</span><span class="nv">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+            <span class="c1">// 处理结果</span>
+            <span class="nf">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">task</span><span class="o">.</span><span class="nf">resume</span><span class="p">()</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>通过拼接 <code class="highlighter-rouge">host</code> 和 <code class="highlighter-rouge">path</code>，可以得到 API 的 entry point。根据这个 URL 创建请求，进行配置，生成 data task 并将请求发送。剩下的工作就是将回调中的 <code class="highlighter-rouge">data</code> 转换为合适的对象类型，并调用 <code class="highlighter-rouge">handler</code> 通知外部调用者了。对于 <code class="highlighter-rouge">User</code> 我们知道可以使用 <code class="highlighter-rouge">User.init(data:)</code>，但是对于一般的 <code class="highlighter-rouge">Response</code>，我们还不知道要如何将数据转为模型。我们可以在 <code class="highlighter-rouge">Request</code> 里再定义一个 <code class="highlighter-rouge">parse(data:)</code> 方法，来要求满足该协议的具体类型提供合适的实现。这样一来，提供转换方法的任务就被“下放”到了 <code class="highlighter-rouge">UserRequest</code>：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="o">...</span>
+    <span class="kd">associatedtype</span> <span class="kt">Response</span>
+    <span class="kd">func</span> <span class="nf">parse</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Response</span><span class="p">?</span>
+<span class="p">}</span>
+
+<span class="kd">struct</span> <span class="kt">UserRequest</span><span class="p">:</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="o">...</span>
+    <span class="kd">typealias</span> <span class="kt">Response</span> <span class="o">=</span> <span class="kt">User</span>
+    <span class="kd">func</span> <span class="nf">parse</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">User</span><span class="p">?</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kt">User</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="n">data</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>有了将 <code class="highlighter-rouge">data</code> 转换为 <code class="highlighter-rouge">Response</code> 的方法后，我们就可以对请求的结果进行处理了：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">extension</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="nf">send</span><span class="p">(</span><span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Response</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">let</span> <span class="nv">url</span> <span class="o">=</span> <span class="kt">URL</span><span class="p">(</span><span class="nv">string</span><span class="p">:</span> <span class="n">host</span><span class="o">.</span><span class="nf">appending</span><span class="p">(</span><span class="n">path</span><span class="p">))</span><span class="o">!</span>
+        <span class="k">var</span> <span class="nv">request</span> <span class="o">=</span> <span class="kt">URLRequest</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">rawValue</span>
+        
+        <span class="c1">// 在示例中我们不需要 `httpBody`，实践中可能需要将 parameter 转为 data</span>
+        <span class="c1">// request.httpBody = ...</span>
+        
+        <span class="k">let</span> <span class="nv">task</span> <span class="o">=</span> <span class="kt">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">dataTask</span><span class="p">(</span><span class="nv">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+            <span class="k">if</span> <span class="k">let</span> <span class="nv">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">,</span> <span class="k">let</span> <span class="nv">res</span> <span class="o">=</span> <span class="nf">parse</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="n">data</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kt">DispatchQueue</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">async</span> <span class="p">{</span> <span class="nf">handler</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="p">}</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="kt">DispatchQueue</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">async</span> <span class="p">{</span> <span class="nf">handler</span><span class="p">(</span><span class="kc">nil</span><span class="p">)</span> <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="n">task</span><span class="o">.</span><span class="nf">resume</span><span class="p">()</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>现在，我们来试试看请求一下这个 API：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="nv">request</span> <span class="o">=</span> <span class="kt">UserRequest</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="s">"onevcat"</span><span class="p">)</span>
+<span class="n">request</span><span class="o">.</span><span class="n">send</span> <span class="p">{</span> <span class="n">user</span> <span class="k">in</span>
+    <span class="k">if</span> <span class="k">let</span> <span class="nv">user</span> <span class="o">=</span> <span class="n">user</span> <span class="p">{</span>
+        <span class="nf">print</span><span class="p">(</span><span class="s">"</span><span class="se">\(</span><span class="n">user</span><span class="o">.</span><span class="n">message</span><span class="se">)</span><span class="s"> from </span><span class="se">\(</span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="se">)</span><span class="s">"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Welcome to MDCC 16! from onevcat</span>
+</code></pre></div></div>
+
+<h4 id="重构关注点分离">重构，关注点分离</h4>
+
+<p>虽然能够实现需求，但是上面的实现可以说非常糟糕。让我们看看现在 <code class="highlighter-rouge">Request</code> 的定义和扩展：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">host</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    <span class="k">var</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    
+    <span class="k">var</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    <span class="k">var</span> <span class="nv">parameter</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    
+    <span class="kd">associatedtype</span> <span class="kt">Response</span>
+    <span class="kd">func</span> <span class="nf">parse</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Response</span><span class="p">?</span>
+<span class="p">}</span>
+
+<span class="kd">extension</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="nf">send</span><span class="p">(</span><span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Response</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="p">{</span>
+        <span class="o">...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>这里最大的问题在于，<code class="highlighter-rouge">Request</code> 管理了太多的东西。一个 <code class="highlighter-rouge">Request</code> 应该做的事情应该仅仅是定义请求入口和期望的响应类型，而现在 <code class="highlighter-rouge">Request</code> 不光定义了 <code class="highlighter-rouge">host</code> 的值，还对如何解析数据了如指掌。最后 <code class="highlighter-rouge">send</code> 方法被绑死在了 <code class="highlighter-rouge">URLSession</code> 的实现上，而且是作为 <code class="highlighter-rouge">Request</code> 的一部分存在。这是很不合理的，因为这意味着我们无法在不更改请求的情况下更新发送请求的方式，它们被耦合在了一起。这样的结构让测试变得异常困难，我们可能需要通过 stub 和 mock 的方式对请求拦截，然后返回构造的数据，这会用到 <code class="highlighter-rouge">NSURLProtocol</code> 的内容，或者是引入一些第三方的测试框架，大大增加了项目的复杂度。在 Objective-C 时期这可能是一个可选项，但是在 Swift 的新时代，我们有好得多的方法来处理这件事情。</p>
+
+<p>让我们开始着手重构刚才的代码，并为它们加上测试吧。首先我们将 <code class="highlighter-rouge">send(handler:)</code> 从 <code class="highlighter-rouge">Request</code> 分离出来。我们需要一个单独的类型来负责发送请求。这里基于 POP 的开发方式，我们从定义一个可以发送请求的协议开始：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="kt">Client</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="nf">send</span><span class="p">(</span><span class="n">_</span> <span class="nv">r</span><span class="p">:</span> <span class="kt">Request</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Request</span><span class="o">.</span><span class="kt">Response</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1">// 编译错误</span>
+</code></pre></div></div>
+
+<p>从上面的声明从语义上来说是挺明确的，但是因为 <code class="highlighter-rouge">Request</code> 是含有关联类型的协议，所以它并不能作为独立的类型来使用，我们只能够将它作为类型约束，来限制输入参数 <code class="highlighter-rouge">request</code>。正确的声明方式应当是：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="kt">Client</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="n">send</span><span class="o">&lt;</span><span class="kt">T</span><span class="p">:</span> <span class="kt">Request</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">r</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="o">.</span><span class="kt">Response</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span>
+
+    <span class="k">var</span> <span class="nv">host</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>除了使用 <code class="highlighter-rouge">&lt;T: Request&gt;</code> 这个泛型方式以外，我们还将 <code class="highlighter-rouge">host</code> 从 <code class="highlighter-rouge">Request</code> 移动到了 <code class="highlighter-rouge">Client</code> 里，这是更适合它的地方。现在，我们可以把含有 <code class="highlighter-rouge">send</code> 的 <code class="highlighter-rouge">Request</code> 协议扩展删除，重新创建一个类型来满足 <code class="highlighter-rouge">Client</code> 了。和之前一样，它将使用 <code class="highlighter-rouge">URLSession</code> 来发送请求：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">struct</span> <span class="kt">URLSessionClient</span><span class="p">:</span> <span class="kt">Client</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="nv">host</span> <span class="o">=</span> <span class="s">"https://api.onevcat.com"</span>
+    
+    <span class="kd">func</span> <span class="n">send</span><span class="o">&lt;</span><span class="kt">T</span><span class="p">:</span> <span class="kt">Request</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">r</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="o">.</span><span class="kt">Response</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">let</span> <span class="nv">url</span> <span class="o">=</span> <span class="kt">URL</span><span class="p">(</span><span class="nv">string</span><span class="p">:</span> <span class="n">host</span><span class="o">.</span><span class="nf">appending</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">path</span><span class="p">))</span><span class="o">!</span>
+        <span class="k">var</span> <span class="nv">request</span> <span class="o">=</span> <span class="kt">URLRequest</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">httpMethod</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">method</span><span class="o">.</span><span class="n">rawValue</span>
+        
+        <span class="k">let</span> <span class="nv">task</span> <span class="o">=</span> <span class="kt">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">dataTask</span><span class="p">(</span><span class="nv">with</span><span class="p">:</span> <span class="n">request</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+            <span class="k">if</span> <span class="k">let</span> <span class="nv">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">,</span> <span class="k">let</span> <span class="nv">res</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="nf">parse</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="n">data</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kt">DispatchQueue</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">async</span> <span class="p">{</span> <span class="nf">handler</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="p">}</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="kt">DispatchQueue</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">async</span> <span class="p">{</span> <span class="nf">handler</span><span class="p">(</span><span class="kc">nil</span><span class="p">)</span> <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="n">task</span><span class="o">.</span><span class="nf">resume</span><span class="p">()</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>现在发送请求的部分和请求本身分离开了，而且我们使用协议的方式定义了 <code class="highlighter-rouge">Client</code>。除了 <code class="highlighter-rouge">URLSessionClient</code> 以外，我们还可以使用任意的类型来满足这个协议，并发送请求。这样网络层的具体实现和请求本身就不再相关了，我们之后在测试的时候会进一步看到这么做所带来的好处。</p>
+
+<p>现在这个的实现里还有一个问题，那就是 <code class="highlighter-rouge">Request</code> 的 <code class="highlighter-rouge">parse</code> 方法。请求不应该也不需要知道如何解析得到的数据，这项工作应该交给 <code class="highlighter-rouge">Response</code> 来做。而现在我们没有对 <code class="highlighter-rouge">Response</code> 进行任何限定。接下来我们将新增一个协议，满足这个协议的类型将知道如何将一个 <code class="highlighter-rouge">data</code> 转换为实际的类型：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="kt">Decodable</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="kd">func</span> <span class="nf">parse</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="k">Self</span><span class="p">?</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">Decodable</code> 定义了一个静态的 <code class="highlighter-rouge">parse</code> 方法，现在我们需要在 <code class="highlighter-rouge">Request</code> 的 <code class="highlighter-rouge">Response</code> 关联类型中为它加上这个限制，这样我们可以保证所有的 <code class="highlighter-rouge">Response</code> 都可以对数据进行解析，原来 <code class="highlighter-rouge">Request</code> 中的 <code class="highlighter-rouge">parse</code> 声明也就可以移除了：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 最终的 Request 协议</span>
+<span class="kd">protocol</span> <span class="kt">Request</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">path</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    <span class="k">var</span> <span class="nv">method</span><span class="p">:</span> <span class="kt">HTTPMethod</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    <span class="k">var</span> <span class="nv">parameter</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+    
+    <span class="c1">// associatedtype Response</span>
+    <span class="c1">// func parse(data: Data) -&gt; Response?</span>
+    <span class="kd">associatedtype</span> <span class="kt">Response</span><span class="p">:</span> <span class="kt">Decodable</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>最后要做的就是让 <code class="highlighter-rouge">User</code> 满足 <code class="highlighter-rouge">Decodable</code>，并且修改上面 <code class="highlighter-rouge">URLSessionClient</code> 的解析部分的代码，让它使用 <code class="highlighter-rouge">Response</code> 中的 <code class="highlighter-rouge">parse</code> 方法：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">extension</span> <span class="kt">User</span><span class="p">:</span> <span class="kt">Decodable</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="kd">func</span> <span class="nf">parse</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">User</span><span class="p">?</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kt">User</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="n">data</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">struct</span> <span class="kt">URLSessionClient</span><span class="p">:</span> <span class="kt">Client</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="n">send</span><span class="o">&lt;</span><span class="kt">T</span><span class="p">:</span> <span class="kt">Request</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">r</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="o">.</span><span class="kt">Response</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="p">{</span>
+        <span class="o">...</span>
+     <span class="c1">// if let data = data, let res = parse(data: data) {</span>
+        <span class="k">if</span> <span class="k">let</span> <span class="nv">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">,</span> <span class="k">let</span> <span class="nv">res</span> <span class="o">=</span> <span class="kt">T</span><span class="o">.</span><span class="kt">Response</span><span class="o">.</span><span class="nf">parse</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="n">data</span><span class="p">)</span> <span class="p">{</span>
+            <span class="o">...</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>最后，将 <code class="highlighter-rouge">UserRequest</code> 中不再需要的 <code class="highlighter-rouge">host</code> 和 <code class="highlighter-rouge">parse</code> 等清理一下，一个类型安全，解耦合的面向协议的网络层就呈现在我们眼前了。想要调用 <code class="highlighter-rouge">UserRequest</code> 时，我们可以这样写：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">URLSessionClient</span><span class="p">()</span><span class="o">.</span><span class="nf">send</span><span class="p">(</span><span class="kt">UserRequest</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="s">"onevcat"</span><span class="p">))</span> <span class="p">{</span> <span class="n">user</span> <span class="k">in</span>
+    <span class="k">if</span> <span class="k">let</span> <span class="nv">user</span> <span class="o">=</span> <span class="n">user</span> <span class="p">{</span>
+        <span class="nf">print</span><span class="p">(</span><span class="s">"</span><span class="se">\(</span><span class="n">user</span><span class="o">.</span><span class="n">message</span><span class="se">)</span><span class="s"> from </span><span class="se">\(</span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="se">)</span><span class="s">"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>当然，你也可以为 <code class="highlighter-rouge">URLSessionClient</code> 添加一个单例来减少请求时的创建开销，或者为请求添加 Promise 的调用方式等等。在 POP 的组织下，这些改动都很自然，也不会牵扯到请求的其他部分。你可以用和 <code class="highlighter-rouge">UserRequest</code> 类型相似的方式，为网络层添加其他的 API 请求，只需要定义请求所必要的内容，而不用担心会触及网络方面的具体实现。</p>
+
+<h4 id="网络层测试">网络层测试</h4>
+
+<p>将 <code class="highlighter-rouge">Client</code> 声明为协议给我们带来了额外的好处，那就是我们不在局限于使用某种特定的技术 (比如这里的 <code class="highlighter-rouge">URLSession</code>) 来实现网络请求。利用 POP，你只是定义了一个发送请求的协议，你可以很容易地使用像是 AFNetworking 或者 Alamofire 这样的成熟的第三方框架来构建具体的数据并处理请求的底层实现。我们甚至可以提供一组“虚假”的对请求的响应，用来进行测试。这和传统的 stub &amp; mock 的方式在概念上是接近的，但是实现起来要简单得多，也明确得多。我们现在来看一看具体应该怎么做。</p>
+
+<p>我们先准备一个文本文件，将它添加到项目的测试 target 中，作为网络请求返回的内容：</p>
+
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 文件名：users:onevcat</span>
+<span class="p">{</span><span class="dl">"</span><span class="s2">name</span><span class="dl">"</span><span class="p">:</span><span class="dl">"</span><span class="s2">Wei Wang</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">message</span><span class="dl">"</span><span class="p">:</span> <span class="dl">"</span><span class="s2">hello</span><span class="dl">"</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>接下来，可以创建一个新的类型，让它满足 <code class="highlighter-rouge">Client</code> 协议。但是与 <code class="highlighter-rouge">URLSessionClient</code> 不同，这个新类型的 <code class="highlighter-rouge">send</code> 方法并不会实际去创建请求，并发送给服务器。我们在测试时需要验证的是一个请求发出后如果服务器按照文档正确响应，那么我们应该也可以得到正确的模型实例。所以这个新的 <code class="highlighter-rouge">Client</code> 需要做的事情就是从本地文件中加载定义好的结果，然后验证模型实例是否正确：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">struct</span> <span class="kt">LocalFileClient</span><span class="p">:</span> <span class="kt">Client</span> <span class="p">{</span>
+    <span class="kd">func</span> <span class="n">send</span><span class="o">&lt;</span><span class="kt">T</span> <span class="p">:</span> <span class="kt">Request</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">r</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">T</span><span class="o">.</span><span class="kt">Response</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">switch</span> <span class="n">r</span><span class="o">.</span><span class="n">path</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="s">"/users/onevcat"</span><span class="p">:</span>
+            <span class="k">guard</span> <span class="k">let</span> <span class="nv">fileURL</span> <span class="o">=</span> <span class="kt">Bundle</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="kt">ProtocolNetworkTests</span><span class="o">.</span><span class="k">self</span><span class="p">)</span><span class="o">.</span><span class="nf">url</span><span class="p">(</span><span class="nv">forResource</span><span class="p">:</span> <span class="s">"users:onevcat"</span><span class="p">,</span> <span class="nv">withExtension</span><span class="p">:</span> <span class="s">""</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nf">fatalError</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="k">guard</span> <span class="k">let</span> <span class="nv">data</span> <span class="o">=</span> <span class="k">try</span><span class="p">?</span> <span class="kt">Data</span><span class="p">(</span><span class="nv">contentsOf</span><span class="p">:</span> <span class="n">fileURL</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nf">fatalError</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="nf">handler</span><span class="p">(</span><span class="kt">T</span><span class="o">.</span><span class="kt">Response</span><span class="o">.</span><span class="nf">parse</span><span class="p">(</span><span class="nv">data</span><span class="p">:</span> <span class="n">data</span><span class="p">))</span>
+        <span class="k">default</span><span class="p">:</span>
+            <span class="nf">fatalError</span><span class="p">(</span><span class="s">"Unknown path"</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="c1">// 为了满足 `Client` 的要求，实际我们不会发送请求</span>
+    <span class="k">let</span> <span class="nv">host</span> <span class="o">=</span> <span class="s">""</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">LocalFileClient</code> 做的事情很简单，它先检查输入请求的 <code class="highlighter-rouge">path</code> 属性，如果是 <code class="highlighter-rouge">/users/onevcat</code> (也就是我们需要测试的请求)，那么就从测试的 bundle 中读取预先定义的文件，将其作为返回结果进行 <code class="highlighter-rouge">parse</code>，然后调用 <code class="highlighter-rouge">handler</code>。如果我们需要增加其他请求的测试，可以添加新的 <code class="highlighter-rouge">case</code> 项。另外，加载本地文件资源的部分应该使用更通用的写法，不过因为我们这里只是示例，就不过多纠结了。</p>
+
+<p>在 <code class="highlighter-rouge">LocalFileClient</code> 的帮助下，现在可以很容易地对 <code class="highlighter-rouge">UserRequest</code> 进行测试了：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">func</span> <span class="nf">testUserRequest</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="nv">client</span> <span class="o">=</span> <span class="kt">LocalFileClient</span><span class="p">()</span>
+    <span class="n">client</span><span class="o">.</span><span class="nf">send</span><span class="p">(</span><span class="kt">UserRequest</span><span class="p">(</span><span class="nv">name</span><span class="p">:</span> <span class="s">"onevcat"</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">user</span> <span class="k">in</span>
+        <span class="kt">XCTAssertNotNil</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+        <span class="kt">XCTAssertEqual</span><span class="p">(</span><span class="n">user</span><span class="o">!.</span><span class="n">name</span><span class="p">,</span> <span class="s">"Wei Wang"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>通过这种方法，我们没有依赖任何第三方测试库，也没有使用 url 代理或者运行时消息转发等等这些复杂的技术，就可以进行请求测试了。保持简单的代码和逻辑，对于项目维护和发展是至关重要的。</p>
+
+<h4 id="可扩展性">可扩展性</h4>
+
+<p>因为高度解耦，这种基于 POP 的实现为代码的扩展提供了相对宽松的可能性。我们刚才已经说过，你不必自行去实现一个完整的 <code class="highlighter-rouge">Client</code>，而可以依赖于现有的网络请求框架，实现请求发送的方法即可。也就是说，你也可以很容易地将某个正在使用的请求方式替换为另外的方式，而不会影响到请求的定义和使用。类似地，在 <code class="highlighter-rouge">Response</code> 的处理上，现在我们定义了 <code class="highlighter-rouge">Decodable</code>，用自己手写的方式在解析模型。我们完全也可以使用任意的第三方 JSON 解析库，来帮助我们迅速构建模型类型，这仅仅只需要实现一个将 <code class="highlighter-rouge">Data</code> 转换为对应模型类型的方法即可。</p>
+
+<p>如果你对 POP 方式的网络请求和模型解析感兴趣的话，不妨可以看看 <a href="https://github.com/ishkawa/APIKit">APIKit</a> 这个框架，我们在示例中所展示的方法，正是这个框架的核心思想。</p>
+
+<h2 id="合陪伴---使用协议帮助改善代码设计">合・陪伴 - 使用协议帮助改善代码设计</h2>
+
+<p>通过面向协议的编程，我们可以从传统的继承上解放出来，用一种更灵活的方式，搭积木一样对程序进行组装。每个协议专注于自己的功能，特别得益于协议扩展，我们可以减少类和继承带来的共享状态的风险，让代码更加清晰。</p>
+
+<p>高度的协议化有助于解耦、测试以及扩展，而结合泛型来使用协议，更可以让我们免于动态调用和类型转换的苦恼，保证了代码的安全性。</p>
+
+<h2 id="提问环节">提问环节</h2>
+
+<p>主题演讲后有几位朋友提了一些很有意义的问题，在这里我也稍作整理。有可能问题和回答与当时的情形会有小的出入，仅供参考。</p>
+
+<p><strong>我刚才在看 demo 的时候发现，你都是直接先写 <code class="highlighter-rouge">protocol</code>，而不是 <code class="highlighter-rouge">struct</code> 或者 <code class="highlighter-rouge">class</code>。是不是我们在实践 POP 的时候都应该直接先定义协议？</strong></p>
+
+<blockquote>
+  <p>我直接写 <code class="highlighter-rouge">protocol</code> 是因为我已经对我要做什么有充分的了解，并且希望演讲不要超时。但是实际开发的时候你可能会无法一开始就写出合适的协议定义。建议可以像我在 demo 中做的那样，先“粗略”地进行定义，然后通过不断重构来得到一个最终的版本。当然，你也可以先用纸笔勾勒一个轮廓，然后再去定义和实现协议。当然了，也没人规定一定需要先定义协议，你完全也可以从普通类型开始写起，然后等发现共通点或者遇到我们之前提到的困境时，再回头看看是不是面向协议更加合适，这需要一定的 POP 经验。</p>
+</blockquote>
+
+<p><strong>既然 POP 有这么多好处，那我们是不是不再需要面向对象，可以全面转向面向协议了？</strong></p>
+
+<blockquote>
+  <p>答案可能让你失望。在我们的日常项目中，每天打交道的 Cocoa 其实还是一个带有浓厚 OOP 色彩的框架。也就是说，可能一段时期内我们不可能抛弃 OOP。不过 POP 其实可以和 OOP “和谐共处”，我们也已经看到了不少使用 POP 改善代码设计的例子。另外需要补充的是，POP 其实也并不是银弹，它有不好的一面。最大的问题是协议会增加代码的抽象层级 (这点上和类继承是一样的)，特别是当你的协议又继承了其他协议的时候，这个问题尤为严重。在经过若干层的继承后，满足末端的协议会变得困难，你也难以确定某个方法究竟满足的是哪个协议的要求。这会让代码迅速变得复杂。如果一个协议并没有能描述很多共通点，或者说能让人很快理解的话，可能使用基本的类型还会更简单一些。</p>
+</blockquote>
+
+<p><strong>谢谢你的演讲，想问一下你们在项目中使用 POP 的情况</strong></p>
+
+<blockquote>
+  <p>我们在项目里用了很多 POP 的概念。上面 demo 里的网络请求的例子就是从实际项目中抽出来的，我们觉得这样的请求写起来非常轻松，因为代码很简单，新人进来交接也十分惬意。除了模型层之外，我们在 view 和 view controller 层也用了一些 POP 的代码，比如从 nib 创建 view 的 <code class="highlighter-rouge">NibCreatable</code>，支持分页请求 tableview controller 的 <code class="highlighter-rouge">NextPageLoadable</code>，空列表时显示页面的 <code class="highlighter-rouge">EmptyPage</code> 等等。因为时间有限，不可能展开一一说明，所以这里我只挑选了一个具有代表性，又不是很复杂的网络的例子。其实每个协议都让我们的代码，特别是 View Controller 变短，而且使测试变为可能。可以说，我们的项目从 POP 受益良多，而且我们应该会继续使用下去。</p>
+</blockquote>
+
+<h2 id="推荐资料">推荐资料</h2>
+
+<p>几个我认为在 POP 实践中值得一看的资料，愿意再进行深入了解的朋友不妨一看。</p>
+
+<ul>
+  <li><a href="https://developer.apple.com/videos/play/wwdc2015/408/">Protocol-Oriented Programming in Swift</a> - WWDC 15 #408</li>
+  <li><a href="https://www.youtube.com/watch?v=XWoNjiSPqI8">Protocols with Associated Types</a> - @alexisgallagher</li>
+  <li><a href="http://matthewpalmer.net/blog/2015/08/30/protocol-oriented-programming-in-the-real-world/">Protocol Oriented Programming in the Real World</a> - @_matthewpalmer</li>
+  <li><a href="https://realm.io/news/appbuilders-natasha-muraschev-practical-protocol-oriented-programming/">Practical Protocol-Oriented-Programming</a> - @natashatherobot</li>
+</ul>
+
+
+  </section>
+</article>
+
+<section class="read-more">
+   
+   
+   <div class="read-more-item">
+       <span class="read-more-item-dim">最近的文章</span>
+       <h2 class="post-list post-list__post-title post-title"><a href="/2016/12/concurrency/" title="link to Swift 并行编程现状和展望 - async/await 和参与者模式">Swift 并行编程现状和展望 - async/await 和参与者模式</a></h2>
+       <p class="excerpt">  这篇文章不是针对当前版本 Swift 3 的，而是对预计于 2018 年发布的 Swift 5 的一些特性的猜想。如果两年后我还记得这篇文章，可能会回来更新一波。在此之前，请当作一篇对现代语言并行编程特性的不太严谨科普文来看待。CPU 速度已经很多年没有大的突破了，硬件行业更多地将重点放在多核心技术上，而与之对应，软件中并行编程的概念也越来越重要。如何利用多核心 CPU，以及拥有密集计算单元的 GPU，来进行快速的处理和计算，是很多开发者十分感兴趣的事情。在今年年初 Swift 4 的...&hellip;</p>
+       <div class="post-list__meta"><time datetime="2016-12-20 11:53:11 +0800" class="post-list__meta--date date">2016-12-20</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/12/concurrency/>继续阅读</a></div>
+   </div>
+   
+   
+   
+   
+   <div class="read-more-item">
+       <span class="read-more-item-dim">更早的文章</span>
+       <h2 class="post-list post-list__post-title post-title"><a href="/2016/11/pop-cocoa-1/" title="link to 面向协议编程与 Cocoa 的邂逅 (上)">面向协议编程与 Cocoa 的邂逅 (上)</a></h2>
+       <p class="excerpt">本文是笔者在 MDCC 16 (移动开发者大会) 上 iOS 专场中的主题演讲的文字整理。您可以在这里找到演讲使用的 Keynote，部分示例代码可以在 MDCC 2016 的官方 repo 中找到。因为全部内容比较长，所以分成了上下两个部分，本文 (上) 主要介绍了一些理论方面的内容，包括面向对象编程存在的问题，面向协议的基本概念和决策模型等，下半部分主要展示了一些笔者日常使用面向协议思想和 Cocoa 开发结合的示例代码，并对其进行了一些解说。引子面向协议编程 (Protocol Or...&hellip;</p>
+       <div class="post-list__meta"><time datetime="2016-11-29 09:22:11 +0800" class="post-list__meta--date date">2016-11-29</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/11/pop-cocoa-1/>继续阅读</a></div>
+   </div>
+   
+</section>
+
+
+
+            <section class="footer">
+    <footer>
+    	<span class="footer__copyright">本站点采用<a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">知识共享 署名-非商业性使用-相同方式共享 4.0 国际 许可协议</a></span>
+        <span class="footer__copyright">由 <a href="https://jekyllrb.com">Jekyll</a> 于 2020-05-14 生成</span>
+        <span class="footer__copyright">本站由 <a href="https://onev.cat">@onevcat</a> 创建，采用 <a href="https://github.com/onevcat/vno-jekyll">Vno - Jekyll</a> 作为主题，您可以在 GitHub 找到<a href="https://github.com/onevcat/OneV-s-Den">本站源码</a> - &copy; 2020</span>
+    </footer>
+</section>
+
+        </div>
+    </div>
+    
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+
+
+
+<script type="text/javascript" src="/js/main.js"></script>
+
+
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-25719337-1', 'onevcat.com');
+    ga('send', 'pageview');
+</script>
+
+
+    
+  </body>
+
+</html>
