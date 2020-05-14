@@ -1,0 +1,355 @@
+I"�<blockquote>
+  <p>本文是对我的《SwiftUI 和 Combine 编程》书籍的补充，对一些虽然很重要，但和书中上下文内容相去略远，或者一些不太适合以书本的篇幅详细展开解释的内容进行了追加说明。如果你对 SwiftUI 和 Combine 的更多话题有兴趣的话，可以考虑<a href="https://objccn.io/products/swift-ui">参阅原书</a>。</p>
+</blockquote>
+
+<p><a href="https://onevcat.com/2019/12/backpressure-in-combine/">上一篇文章</a>里，我们探索了 Combine 里对 back pressure 的处理。在那边，主要涉及到的是实现自定义的 <code class="highlighter-rouge">Subscriber</code>，来通过控制事件流终端的 pull 行为，实现合理的 back pressure 机制。</p>
+
+<p>对于整个事件流的另一端，<code class="highlighter-rouge">Publisher</code>，有时候我们也有自定义的需求。在《SwiftUI 和 Combine 编程》中，在“打包”多个请求时，我们用了一种很 naive 的方法：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">struct</span> <span class="kt">LoadPokemonRequest</span> <span class="p">{</span>
+    <span class="kd">static</span> <span class="k">var</span> <span class="nv">all</span><span class="p">:</span> <span class="kt">AnyPublisher</span><span class="o">&lt;</span><span class="p">[</span><span class="kt">PokemonViewModel</span><span class="p">],</span> <span class="kt">AppError</span><span class="o">&gt;</span> <span class="p">{</span>
+        <span class="p">(</span><span class="mi">1</span><span class="o">...</span><span class="mi">30</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="kt">LoadPokemonRequest</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="nv">$0</span><span class="p">)</span><span class="o">.</span><span class="n">publisher</span> <span class="p">}</span>
+            <span class="o">.</span><span class="n">zipAll</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>其中，<code class="highlighter-rouge">zipAll</code> 是 <code class="highlighter-rouge">Array</code> 上的 extension：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">extension</span> <span class="kt">Array</span> <span class="k">where</span> <span class="kt">Element</span><span class="p">:</span> <span class="kt">Publisher</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">zipAll</span><span class="p">:</span> <span class="kt">AnyPublisher</span><span class="o">&lt;</span><span class="p">[</span><span class="kt">Element</span><span class="o">.</span><span class="kt">Output</span><span class="p">],</span> <span class="kt">Element</span><span class="o">.</span><span class="kt">Failure</span><span class="o">&gt;</span> <span class="p">{</span>
+        <span class="k">let</span> <span class="nv">initial</span> <span class="o">=</span> <span class="kt">Just</span><span class="p">([</span><span class="kt">Element</span><span class="o">.</span><span class="kt">Output</span><span class="p">]())</span>
+            <span class="o">.</span><span class="nf">setFailureType</span><span class="p">(</span><span class="nv">to</span><span class="p">:</span> <span class="kt">Element</span><span class="o">.</span><span class="kt">Failure</span><span class="o">.</span><span class="k">self</span><span class="p">)</span>
+            <span class="o">.</span><span class="nf">eraseToAnyPublisher</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nf">reduce</span><span class="p">(</span><span class="n">initial</span><span class="p">)</span> <span class="p">{</span> <span class="n">result</span><span class="p">,</span> <span class="n">publisher</span> <span class="k">in</span>
+            <span class="n">result</span><span class="o">.</span><span class="nf">zip</span><span class="p">(</span><span class="n">publisher</span><span class="p">)</span> <span class="p">{</span> <span class="nv">$0</span> <span class="o">+</span> <span class="p">[</span><span class="nv">$1</span><span class="p">]</span> <span class="p">}</span><span class="o">.</span><span class="nf">eraseToAnyPublisher</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>这个做法创建了多个“临时” <code class="highlighter-rouge">Publisher</code>，并通过 <code class="highlighter-rouge">reduce</code> 把它们组合在一起。对于 <code class="highlighter-rouge">zip</code> 来说，这么做侥幸可以工作，但是这并不是一个一般性的解决方案。和自定义 <code class="highlighter-rouge">Subscriber</code> 一样，Combine 中的 <code class="highlighter-rouge">Publisher</code> 也是 protocol，我们可以按照需求去创建那些 Combine 库中还不存在、但是很有用的 <code class="highlighter-rouge">Publisher</code>。在本文里，我们就以创建一个真正的 <code class="highlighter-rouge">ZipAll</code> 作为例子，来说明自定义 <code class="highlighter-rouge">Publisher</code> 的一般方法。</p>
+
+<p>你可以打开一个 Playground，跟随本文键入代码，也可以<a href="https://gist.github.com/onevcat/138ca5a41ee1a7f2994a6c366936744e">在这里</a>直接查看并尝试完整的代码。</p>
+
+<p>在我们正式开始之前，我还是想强调下面这张图，它总结了 Combine 框架的完整工作流程。其实归根溯源，不管我们只是想很初级地使用 Combine 的内建内容，还是想更高级一些去自定义响应式的操作和事件流，归根结底，我们都是在如图定义的工作流中进行操作。只有真正理解和熟悉这张 Combine 的工作流程图，才能说是真正掌握了 Combine 的思维方式。</p>
+
+<p><img src="/assets/images/2019/publisher-subscriber-flow.svg" alt="" /></p>
+
+<h2 id="主要角色和工作">主要角色和工作</h2>
+
+<p>按照上图，我们逐行来梳理在自定义一个 <code class="highlighter-rouge">Publisher</code> 时需要做些什么。这可以为自定义 <code class="highlighter-rouge">Publisher</code> 的设计提供一个概览性的指导。对于图中的每个步骤，说明如下：</p>
+
+<ol>
+  <li><code class="highlighter-rouge">Subscriber</code> 可以通过调用 <code class="highlighter-rouge">Publisher.subscribe</code> 来告诉 <code class="highlighter-rouge">Publisher</code> 订阅开始。自然地，我们需要在 <code class="highlighter-rouge">Publisher</code> 上增加一个方法：<code class="highlighter-rouge">subscribe</code>。</li>
+  <li><code class="highlighter-rouge">Publisher</code> 需要调用 <code class="highlighter-rouge">Subscriber</code> 上的 <code class="highlighter-rouge">receive(subscription:)</code> 方法。这个方法接收一个 <code class="highlighter-rouge">Subscription</code>。那么显然，<code class="highlighter-rouge">Publisher</code> 需要知道如何创建一个<strong>合适的</strong> <code class="highlighter-rouge">Subscription</code>。</li>
+  <li><code class="highlighter-rouge">Subscriber</code> 通过调用 2 中创建的 <code class="highlighter-rouge">Subscription</code> 上的 <code class="highlighter-rouge">request</code> 方法，来首次表明自己需要多少个事件。也就是说，<code class="highlighter-rouge">Subscription</code> 上必须要有一个 <code class="highlighter-rouge">request</code> 方法，它接受并记录 <code class="highlighter-rouge">Subscribers.Demand</code> (这也是 <code class="highlighter-rouge">Subscription</code> 协议中所定义的方法)。如果你对这个过程还不太熟悉，建议你可以参考我之前关于自定义 <code class="highlighter-rouge">Subscriber</code> 和实现 back pressure 的<a href="https://onevcat.com/2019/12/backpressure-in-combine/">文章</a>，那边对 <code class="highlighter-rouge">Demand</code> 的用法和原理进行了详细的说明。</li>
+  <li>当新的事件发生，并且当前的 demand 满足要求 (也即 <code class="highlighter-rouge">Subscriber</code> 还需要更多事件) 时，调用 <code class="highlighter-rouge">Subscriber.receive(_:)</code> 来向下游发送一个事件。这件事情可以由 <code class="highlighter-rouge">Publisher</code> 完成，但是更多的时候，我们会倾向于保持 <code class="highlighter-rouge">Publisher</code> 的值语义，然后选择在 <code class="highlighter-rouge">Subscription</code> 中实现这些逻辑。因为 <code class="highlighter-rouge">Subscription</code> 在大部分情况下会保持某个 buffer，并随着时间进行响应并改变值 (毕竟这正是 Combine 或者说响应式编程所要解决的问题领域)，所以一般我们会选择将 <code class="highlighter-rouge">Subscription</code> 声明为 <code class="highlighter-rouge">class</code> 并使用引用语义。另外，<code class="highlighter-rouge">Subscriber.receive(_:)</code> 返回的 <code class="highlighter-rouge">Demand</code> 值应该被追加到剩余需要的事件个数中。</li>
+  <li>同 4。</li>
+  <li>如果事件结束 (比如异步操作完全完成，或者出现了错误)，需要调用 <code class="highlighter-rouge">Subscriber.receive(completion:)</code>。这一步也经常是由 <code class="highlighter-rouge">Subscription</code> 来实现的。</li>
+</ol>
+
+<p>上面的 4，5，6 中涉及的都是在 <code class="highlighter-rouge">Subscription</code> 中调用 <code class="highlighter-rouge">Subscriber</code> 的方法，所以在我们的实现中，在 <code class="highlighter-rouge">Subscription</code> 里持有 <code class="highlighter-rouge">Subscriber</code> 是一个自然而然的选择。对于自定义的具体的 <code class="highlighter-rouge">Publisher</code> 类型来说，它只负责提供一个简单的接口封装，来满足 <code class="highlighter-rouge">Publisher</code> 协议的规定，并保持这个角色的值语义 (在 Combine 的实现中，绝大部分的 <code class="highlighter-rouge">Publisher</code> 都拥有值语义，这让订阅的声明周期和行为相对简单)。事件发送，值的保持等涉及到具体、时序上的操作，则由一个相对复杂的 <code class="highlighter-rouge">Subscription</code> 实现。</p>
+
+<h3 id="publisher">Publisher</h3>
+
+<p>对于我们要实现的接受数组版本的 <code class="highlighter-rouge">zip</code> 来说，最直接的就是实现一个 <code class="highlighter-rouge">ZipAll</code>，让它实现 <code class="highlighter-rouge">Publisher</code> 协议。遵循 Combine 的一般方式，我们把 <code class="highlighter-rouge">ZipAll</code> 定义在 <code class="highlighter-rouge">Publishers</code> 中，并添加上 <code class="highlighter-rouge">Publisher</code> 协议所需要的方法：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">extension</span> <span class="kt">Publishers</span> <span class="p">{</span>
+    <span class="kd">struct</span> <span class="kt">ZipAll</span><span class="o">&lt;</span><span class="kt">Collection</span><span class="p">:</span> <span class="kt">Swift</span><span class="o">.</span><span class="kt">Collection</span><span class="o">&gt;</span><span class="p">:</span> <span class="kt">Publisher</span> 
+    <span class="k">where</span> <span class="kt">Collection</span><span class="o">.</span><span class="kt">Element</span><span class="p">:</span> <span class="kt">Publisher</span> 
+    <span class="p">{</span>
+        <span class="c1">// 1</span>
+        <span class="kd">typealias</span> <span class="kt">Output</span> <span class="o">=</span> <span class="p">[</span><span class="kt">Collection</span><span class="o">.</span><span class="kt">Element</span><span class="o">.</span><span class="kt">Output</span><span class="p">]</span>
+        <span class="kd">typealias</span> <span class="kt">Failure</span> <span class="o">=</span> <span class="kt">Collection</span><span class="o">.</span><span class="kt">Element</span><span class="o">.</span><span class="kt">Failure</span>
+      
+        <span class="kd">private</span> <span class="k">let</span> <span class="nv">publishers</span><span class="p">:</span> <span class="kt">Collection</span>
+
+        <span class="nf">init</span><span class="p">(</span><span class="n">_</span> <span class="nv">publishers</span><span class="p">:</span> <span class="kt">Collection</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">self</span><span class="o">.</span><span class="n">publishers</span> <span class="o">=</span> <span class="n">publishers</span>
+        <span class="p">}</span>
+
+        <span class="c1">// 2</span>
+        <span class="kd">func</span> <span class="n">receive</span><span class="o">&lt;</span><span class="kt">S</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">subscriber</span><span class="p">:</span> <span class="kt">S</span><span class="p">)</span>
+            <span class="k">where</span> <span class="kt">S</span> <span class="p">:</span> <span class="kt">Subscriber</span><span class="p">,</span> <span class="kt">Failure</span> <span class="o">==</span> <span class="kt">S</span><span class="o">.</span><span class="kt">Failure</span><span class="p">,</span> <span class="kt">Output</span> <span class="o">==</span> <span class="kt">S</span><span class="o">.</span><span class="kt">Input</span>
+        <span class="p">{</span>
+            <span class="c1">// 3</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<ol>
+  <li>作为新的 <code class="highlighter-rouge">Publisher</code>，<code class="highlighter-rouge">ZipAll</code> 也需要自己的 <code class="highlighter-rouge">Output</code>。通过限定 <code class="highlighter-rouge">ZipAll</code> 所接收的子 <code class="highlighter-rouge">Publisher</code> 具有相同的类型，新的 <code class="highlighter-rouge">Publisher</code> 的 <code class="highlighter-rouge">Output</code> 也便可以被确定。</li>
+  <li>这是 <code class="highlighter-rouge">Publisher</code> 协议所规定需要实现的方法，不论你自定义的 <code class="highlighter-rouge">Publisher</code> 具体是什么，这一部分是不会改变的。</li>
+  <li>在 <code class="highlighter-rouge">receive(subscriber:)</code> 里，按照 Combine 工作流程，我们创建 <code class="highlighter-rouge">Subscription</code> 并调用 <code class="highlighter-rouge">Subscriber.receive(subscription:)</code> 来把这个新创建的 <code class="highlighter-rouge">Subscription</code> 发送给 <code class="highlighter-rouge">Subscriber</code>。(流程图中的 1 和 2)，然后等待 <code class="highlighter-rouge">Subscriber</code> 首次请求数据。现在我们还没有创建合适的 <code class="highlighter-rouge">Subscription</code> 类型，所以先把它留空。在后面我们会回到这个方法，并填上需要的内容。</li>
+</ol>
+
+<p>在 <code class="highlighter-rouge">init</code> 里，我们接收了一个类型满足 <code class="highlighter-rouge">Swift.Collection</code>，且其中元素均为同类型 <code class="highlighter-rouge">Publisher</code> 的集合类型作为参数。在实际使用这个 <code class="highlighter-rouge">ZipAll</code> 时，我们大概会想要做的步骤如下：</p>
+
+<ol>
+  <li>订阅每个输入的 publisher，并观察它们的事件。建立符合输入的 publisher 个数的缓冲区。</li>
+  <li>某个 publisher 发出新的值后，先将它保存到对应的缓冲区里。然后检查所有这些缓冲区中是不是都有待处理的元素。如果都有，则将它们的首个元素移出来，形成一个数组并作为新的 <code class="highlighter-rouge">ZipAll</code> 值发送出去。</li>
+  <li>某个输入 publisher 发出成功完成的事件后，将它记录下来，并检查是不是所有的输入 publisher 都完成了。如果是，则将 <code class="highlighter-rouge">.finish</code> 事件发送出去。</li>
+  <li>如果某个输入 publisher 发出了错误，那么将错误直接作为新 <code class="highlighter-rouge">Publisher</code> 的结果发出。</li>
+</ol>
+
+<p>暂时我们现在还不知道要怎么往 <code class="highlighter-rouge">receive(subscriber:)</code> 中填写内容，这要求我们需要知道如何创建 <code class="highlighter-rouge">Subscription</code>。好消息是，<code class="highlighter-rouge">Subscription</code> 本身也是一个被严格定义的协议，这为我们实现自定义订阅类型提供了一些基本的依据。</p>
+
+<h3 id="subscription">Subscription</h3>
+
+<p>紧接着 <code class="highlighter-rouge">ZipAll</code> 的定义，在 <code class="highlighter-rouge">Publishers</code> 中创建一个私有的 <code class="highlighter-rouge">ZipAppSubscription</code> 类：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">extension</span> <span class="kt">Publishers</span> <span class="p">{</span>
+    <span class="kd">struct</span> <span class="kt">ZipAll</span> <span class="o">...</span> <span class="p">{</span>
+        <span class="c1">// ...</span>
+    <span class="p">}</span>
+    
+    <span class="kd">private</span> <span class="kd">class</span> <span class="kt">ZipAppSubscription</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Failure</span><span class="p">:</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">:</span> <span class="kt">Subscription</span>
+    <span class="p">{</span>
+        <span class="c1">// 1</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Combine 中，<code class="highlighter-rouge">Subscription</code> 协议定义了两个必须实现的方法：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">func</span> <span class="nf">request</span><span class="p">(</span><span class="n">_</span> <span class="nv">demand</span><span class="p">:</span> <span class="kt">Subscribers</span><span class="o">.</span><span class="kt">Demand</span><span class="p">)</span>
+<span class="kd">func</span> <span class="nf">cancel</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>前者用来接收 <code class="highlighter-rouge">Subscriber</code> 的请求，后者用来取消当前订阅。</p>
+
+<p>在 <code class="highlighter-rouge">ZipAppSubscription</code> 的 <code class="highlighter-rouge">// 1</code> 里添加下面这些内容：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 1</span>
+<span class="kd">private</span> <span class="k">var</span> <span class="nv">leftDemand</span><span class="p">:</span> <span class="kt">Subscribers</span><span class="o">.</span><span class="kt">Demand</span> <span class="o">=</span> <span class="o">.</span><span class="k">none</span>
+<span class="kd">private</span> <span class="k">var</span> <span class="nv">subscriber</span><span class="p">:</span> <span class="kt">AnySubscriber</span><span class="o">&lt;</span><span class="p">[</span><span class="kt">Output</span><span class="p">],</span> <span class="kt">Failure</span><span class="o">&gt;</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="kd">private</span> <span class="k">var</span> <span class="nv">buffer</span><span class="p">:</span> <span class="p">[[</span><span class="kt">Output</span><span class="p">]]</span>
+<span class="kd">private</span> <span class="k">let</span> <span class="nv">publishers</span><span class="p">:</span> <span class="p">[</span><span class="kt">AnyPublisher</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Failure</span><span class="o">&gt;</span><span class="p">]</span>
+<span class="kd">private</span> <span class="k">var</span> <span class="nv">childSubscriptions</span><span class="p">:</span> <span class="p">[</span><span class="kt">AnyCancellable</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="kd">private</span> <span class="k">var</span> <span class="nv">finishedCount</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="c1">// 2</span>
+<span class="kd">private</span> <span class="k">var</span> <span class="nv">lock</span> <span class="o">=</span> <span class="kt">NSRecursiveLock</span><span class="p">()</span>
+
+<span class="kd">init</span><span class="o">&lt;</span><span class="kt">S</span><span class="p">:</span> <span class="kt">Subscriber</span><span class="o">&gt;</span><span class="p">(</span>
+    <span class="nv">subscriber</span><span class="p">:</span> <span class="kt">S</span><span class="p">,</span>
+    <span class="nv">publishers</span><span class="p">:</span> <span class="p">[</span><span class="kt">AnyPublisher</span><span class="o">&lt;</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Failure</span><span class="o">&gt;</span><span class="p">]</span>
+<span class="p">)</span> <span class="k">where</span> <span class="kt">Failure</span> <span class="o">==</span> <span class="kt">S</span><span class="o">.</span><span class="kt">Failure</span><span class="p">,</span> <span class="p">[</span><span class="kt">Output</span><span class="p">]</span> <span class="o">==</span> <span class="kt">S</span><span class="o">.</span><span class="kt">Input</span>
+<span class="p">{</span>
+    <span class="k">self</span><span class="o">.</span><span class="n">subscriber</span> <span class="o">=</span> <span class="kt">AnySubscriber</span><span class="p">(</span><span class="n">subscriber</span><span class="p">)</span>
+    <span class="k">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="kt">Array</span><span class="p">(</span><span class="nv">repeating</span><span class="p">:</span> <span class="p">[],</span> <span class="nv">count</span><span class="p">:</span> <span class="n">publishers</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
+    <span class="k">self</span><span class="o">.</span><span class="n">publishers</span> <span class="o">=</span> <span class="n">publishers</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nf">request</span><span class="p">(</span><span class="n">_</span> <span class="nv">demand</span><span class="p">:</span> <span class="kt">Subscribers</span><span class="o">.</span><span class="kt">Demand</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">lock</span><span class="o">.</span><span class="nf">lock</span><span class="p">()</span>
+    <span class="k">defer</span> <span class="p">{</span> <span class="n">lock</span><span class="o">.</span><span class="nf">unlock</span><span class="p">()</span> <span class="p">}</span>
+
+    <span class="k">self</span><span class="o">.</span><span class="n">leftDemand</span> <span class="o">+=</span> <span class="n">demand</span>
+
+    <span class="c1">// 3</span>
+    <span class="nf">send</span><span class="p">()</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nf">cancel</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">lock</span><span class="o">.</span><span class="nf">lock</span><span class="p">()</span>
+    <span class="k">defer</span> <span class="p">{</span> <span class="n">lock</span><span class="o">.</span><span class="nf">unlock</span><span class="p">()</span> <span class="p">}</span>
+
+    <span class="n">childSubscriptions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">subscriber</span> <span class="o">=</span> <span class="kc">nil</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<ol>
+  <li>既然生活在 Combine 的世界中，我们就得遵守 Combine 的游戏规则。<code class="highlighter-rouge">leftDemand</code> 将记录下游订阅者还需要的值的数量，这样我们可以遵守基于 pull 的行为规则。</li>
+  <li>我们不能确定 zip 操作中涉及的各个 publisher 最终会在哪个线程向我们发送数据，这些数据在接收后会被放到 <code class="highlighter-rouge">buffer</code> 中待用，因此这里出现了多个线程共享资源的情况。让整个操作线程安全的最简单的方法就是上锁。</li>
+  <li>当收到 <code class="highlighter-rouge">request(_:)</code> 调用时，除了将下游告知的需求 <code class="highlighter-rouge">demand</code> 累加到 <code class="highlighter-rouge">leftDemand</code> 以外，我们还需要检查 <code class="highlighter-rouge">buffer</code> 并尝试触发事件 <code class="highlighter-rouge">send</code> 就是做这件事情的。</li>
+</ol>
+
+<p>另外，我们还需要一个开始订阅的方法 (<code class="highlighter-rouge">startSubscribing</code>)，它会负责开始订阅 <code class="highlighter-rouge">publishers</code> 发出的值和事件。</p>
+
+<p>这个 <code class="highlighter-rouge">startSubscribing</code> 和 3 中的 <code class="highlighter-rouge">send</code> 是 <code class="highlighter-rouge">Subscription</code> 的关键内容。前者负责把对应的事件进行转发处理：对于接收到的值，将它缓存在 <code class="highlighter-rouge">buffer</code> 中，并判断是否应当触发 zip 合并后的事件；对于接收到的结束事件，如果是错误事件，则结束自身事件流，如果是子 publisher 的结束事件，则将它记录下来，直到所有的 publisher 都结束后，再向外发送自身的结束事件。</p>
+
+<p>这些逻辑看起来有些麻烦，但是如果给翻译翻译的话，代码看起来还是比较简单的：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">func</span> <span class="nf">startSubscribing</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">publisher</span><span class="p">)</span> <span class="k">in</span> <span class="n">publishers</span><span class="o">.</span><span class="nf">enumerated</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">publisher</span><span class="o">.</span><span class="nf">sink</span><span class="p">(</span>
+            <span class="nv">receiveCompletion</span><span class="p">:</span> <span class="p">{</span>  <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="n">completion</span> <span class="k">in</span>
+                <span class="k">self</span><span class="p">?</span><span class="o">.</span><span class="nf">receiveCompletion</span><span class="p">(</span><span class="n">completion</span><span class="p">,</span> <span class="nv">at</span><span class="p">:</span> <span class="n">i</span><span class="p">)</span>
+            <span class="p">},</span>
+            <span class="nv">receiveValue</span><span class="p">:</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="n">value</span> <span class="k">in</span>
+                <span class="k">self</span><span class="p">?</span><span class="o">.</span><span class="nf">receiveValue</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nv">at</span><span class="p">:</span> <span class="n">i</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">)</span><span class="o">.</span><span class="nf">store</span><span class="p">(</span><span class="nv">in</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">childSubscriptions</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">private</span> <span class="kd">func</span> <span class="nf">receiveValue</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Output</span><span class="p">,</span> <span class="n">at</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span>
+<span class="p">)</span> <span class="p">{</span>
+    <span class="n">lock</span><span class="o">.</span><span class="nf">lock</span><span class="p">()</span>
+    <span class="k">defer</span> <span class="p">{</span> <span class="n">lock</span><span class="o">.</span><span class="nf">unlock</span><span class="p">()</span> <span class="p">}</span>
+    <span class="n">buffer</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="nf">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nf">send</span><span class="p">()</span>
+<span class="p">}</span>
+
+<span class="kd">private</span> <span class="kd">func</span> <span class="nf">receiveCompletion</span><span class="p">(</span>
+    <span class="n">_</span> <span class="nv">event</span><span class="p">:</span> <span class="kt">Subscribers</span><span class="o">.</span><span class="kt">Completion</span><span class="o">&lt;</span><span class="kt">Failure</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">at</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span>
+<span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">lock</span><span class="o">.</span><span class="nf">lock</span><span class="p">()</span>
+    <span class="k">defer</span> <span class="p">{</span> <span class="n">lock</span><span class="o">.</span><span class="nf">unlock</span><span class="p">()</span> <span class="p">}</span>
+
+    <span class="k">guard</span> <span class="k">let</span> <span class="nv">subscriber</span> <span class="o">=</span> <span class="n">subscriber</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
+
+    <span class="k">switch</span> <span class="n">event</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="o">.</span><span class="nv">finished</span><span class="p">:</span>
+        <span class="n">finishedCount</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">finishedCount</span> <span class="o">==</span> <span class="n">buffer</span><span class="o">.</span><span class="n">count</span> <span class="p">{</span>
+            <span class="n">subscriber</span><span class="o">.</span><span class="nf">receive</span><span class="p">(</span><span class="nv">completion</span><span class="p">:</span> <span class="o">.</span><span class="n">finished</span><span class="p">)</span>
+            <span class="k">self</span><span class="o">.</span><span class="n">subscriber</span> <span class="o">=</span> <span class="kc">nil</span>
+        <span class="p">}</span>
+    <span class="k">case</span> <span class="o">.</span><span class="nv">failure</span><span class="p">:</span>
+        <span class="n">subscriber</span><span class="o">.</span><span class="nf">receive</span><span class="p">(</span><span class="nv">completion</span><span class="p">:</span> <span class="n">event</span><span class="p">)</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">subscriber</span> <span class="o">=</span> <span class="kc">nil</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>然后是 <code class="highlighter-rouge">Subscription</code> 里的另一个重要方法 <code class="highlighter-rouge">send</code>，它负责检查 <code class="highlighter-rouge">buffer</code>，并在满足 zip 逻辑的时候向外发布一个新值：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">func</span> <span class="nf">send</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">guard</span> <span class="k">let</span> <span class="nv">subscriber</span> <span class="o">=</span> <span class="n">subscriber</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
+    <span class="k">while</span> <span class="n">leftDemand</span> <span class="o">&gt;</span> <span class="o">.</span><span class="k">none</span><span class="p">,</span> <span class="k">let</span> <span class="nv">outputs</span> <span class="o">=</span> <span class="n">firstRowOutputItems</span> <span class="p">{</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">leftDemand</span> <span class="o">-=</span> <span class="o">.</span><span class="nf">max</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">let</span> <span class="nv">nextDemand</span> <span class="o">=</span> <span class="n">subscriber</span><span class="o">.</span><span class="nf">receive</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">leftDemand</span> <span class="o">+=</span> <span class="n">nextDemand</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">private</span> <span class="k">var</span> <span class="nv">firstRowOutputItems</span><span class="p">:</span> <span class="p">[</span><span class="kt">Output</span><span class="p">]?</span> <span class="p">{</span>
+    <span class="k">guard</span> <span class="n">buffer</span><span class="o">.</span><span class="nf">allSatisfy</span><span class="p">({</span> <span class="o">!</span><span class="nv">$0</span><span class="o">.</span><span class="n">isEmpty</span> <span class="p">})</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="kc">nil</span> <span class="p">}</span>
+    <span class="k">var</span> <span class="nv">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="kt">Output</span><span class="p">]()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="k">in</span> <span class="mi">0</span> <span class="o">..&lt;</span> <span class="n">buffer</span><span class="o">.</span><span class="n">count</span> <span class="p">{</span>
+        <span class="k">var</span> <span class="nv">column</span> <span class="o">=</span> <span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">outputs</span><span class="o">.</span><span class="nf">append</span><span class="p">(</span><span class="n">column</span><span class="o">.</span><span class="nf">remove</span><span class="p">(</span><span class="nv">at</span><span class="p">:</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">outputs</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>这样，我们就有一个完整的 <code class="highlighter-rouge">Subscription</code> 角色了。最后，让我们回到 <code class="highlighter-rouge">Publishers.ZipAll</code> 中，把刚才剩下的 <code class="highlighter-rouge">receive(subscriber:)</code> 方法补完。创建一个 <code class="highlighter-rouge">ZipAppSubscription</code> 实例，调用 <code class="highlighter-rouge">Subscriber</code> 协议所定义的 <code class="highlighter-rouge">receive(subscription:)</code> 方法，并开始订阅所有的 publisher：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">struct</span> <span class="kt">ZipAll</span> <span class="o">...</span> <span class="p">{</span>
+
+    <span class="c1">// ...</span>
+
+    <span class="kd">func</span> <span class="n">receive</span><span class="o">&lt;</span><span class="kt">S</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">subscriber</span><span class="p">:</span> <span class="kt">S</span><span class="p">)</span>
+        <span class="k">where</span> <span class="kt">S</span> <span class="p">:</span> <span class="kt">Subscriber</span><span class="p">,</span> <span class="kt">Failure</span> <span class="o">==</span> <span class="kt">S</span><span class="o">.</span><span class="kt">Failure</span><span class="p">,</span> <span class="kt">Output</span> <span class="o">==</span> <span class="kt">S</span><span class="o">.</span><span class="kt">Input</span>
+    <span class="p">{</span>
+        <span class="k">let</span> <span class="nv">subscription</span> <span class="o">=</span> <span class="kt">ZipAppSubscription</span><span class="o">&lt;</span><span class="kt">Collection</span><span class="o">.</span><span class="kt">Element</span><span class="o">.</span><span class="kt">Output</span><span class="p">,</span> <span class="kt">Failure</span><span class="o">&gt;</span><span class="p">(</span>
+            <span class="nv">subscriber</span><span class="p">:</span> <span class="n">subscriber</span><span class="p">,</span> <span class="nv">publishers</span><span class="p">:</span> <span class="n">publishers</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="nv">$0</span><span class="o">.</span><span class="nf">eraseToAnyPublisher</span><span class="p">()</span> <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">subscriber</span><span class="o">.</span><span class="nf">receive</span><span class="p">(</span><span class="nv">subscription</span><span class="p">:</span> <span class="n">subscription</span><span class="p">)</span>
+        <span class="n">subscription</span><span class="o">.</span><span class="nf">startSubscribing</span><span class="p">()</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>现在，我们就可以通过 <code class="highlighter-rouge">Publishers.ZipAll</code> 来创建一个真正的 <code class="highlighter-rouge">ZipAll</code> 的 <code class="highlighter-rouge">Publisher</code> 了。比如：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">let</span> <span class="nv">p1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">publisher</span>
+<span class="k">let</span> <span class="nv">p2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">publisher</span>
+<span class="k">let</span> <span class="nv">p3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span><span class="o">.</span><span class="n">publisher</span>
+
+<span class="k">let</span> <span class="nv">zipped</span> <span class="o">=</span> <span class="kt">Publishers</span><span class="o">.</span><span class="kt">ZipAll</span><span class="p">([</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">p3</span><span class="p">])</span>
+<span class="k">let</span> <span class="nv">subscription</span> <span class="o">=</span> <span class="n">zipped</span><span class="o">.</span><span class="nf">sink</span><span class="p">(</span>
+    <span class="nv">receiveCompletion</span><span class="p">:</span> <span class="p">{</span><span class="n">completion</span> <span class="k">in</span>
+        <span class="nf">print</span><span class="p">(</span><span class="s">"receiveCompletion </span><span class="se">\(</span><span class="n">completion</span><span class="se">)</span><span class="s">"</span><span class="p">)</span>
+    <span class="p">},</span>
+    <span class="nv">receiveValue</span><span class="p">:</span> <span class="p">{</span> <span class="n">values</span> <span class="k">in</span>
+        <span class="nf">print</span><span class="p">(</span><span class="s">"receiveValues: </span><span class="se">\(</span><span class="n">values</span><span class="se">)</span><span class="s">"</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1">// 输出：</span>
+<span class="c1">// receiveValues: [1, 4, 7]</span>
+<span class="c1">// receiveValues: [2, 5, 8]</span>
+<span class="c1">// receiveValues: [3, 6, 9]</span>
+<span class="c1">// receiveCompletion finished</span>
+</code></pre></div></div>
+
+<p>当然，最后，我们可以学习 <code class="highlighter-rouge">Publishers</code> 中的其他类型那样，为 <code class="highlighter-rouge">ZipAll</code> 提供一个辅助方法，让创建 <code class="highlighter-rouge">Publishers.ZipAll</code> 变得简单一些：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">extension</span> <span class="kt">Collection</span> <span class="k">where</span> <span class="kt">Element</span><span class="p">:</span> <span class="kt">Publisher</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">zipAll</span><span class="p">:</span> <span class="kt">Publishers</span><span class="o">.</span><span class="kt">ZipAll</span><span class="o">&lt;</span><span class="k">Self</span><span class="o">&gt;</span> <span class="p">{</span>
+        <span class="kt">Publishers</span><span class="o">.</span><span class="kt">ZipAll</span><span class="p">(</span><span class="k">self</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">let</span> <span class="nv">zipped</span> <span class="o">=</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">p3</span><span class="p">]</span><span class="o">.</span><span class="n">zipAll</span>
+</code></pre></div></div>
+
+<h2 id="不足之处和改进空间">不足之处和改进空间</h2>
+
+<p>虽然 <code class="highlighter-rouge">ZipAll</code> 应该已经可以正常工作了，但是还有一些值得优化的地方。</p>
+
+<h3 id="性能改进">性能改进</h3>
+
+<p>首先是 <code class="highlighter-rouge">firstRowOutputItems</code> 中的数组操作的效率。<code class="highlighter-rouge">buffer</code> 的类型是 <code class="highlighter-rouge">[[Output]]</code>，它其中的元素也只是普通的 <code class="highlighter-rouge">Array</code>。因此 <code class="highlighter-rouge">firstRowOutputItems</code> 里的移除首个元素 <code class="highlighter-rouge">column.remove(at: 0)</code> 的操作，其实时间复杂度是 <code class="highlighter-rouge">O(n)</code>，而它又处于一个 <code class="highlighter-rouge">buffer.count</code> 的循环中，所以这里会带来一个 n^2 的复杂度，是难以接收的。我们可以自己创建一个队列的数据结构，把 <code class="highlighter-rouge">remove(at: 0)</code> 的操作简化为 <code class="highlighter-rouge">O(1)</code> 来避免这个问题。</p>
+
+<p>其次，还是在 <code class="highlighter-rouge">firstRowOutputItems</code> 里，我们每次都对“是否 <code class="highlighter-rouge">buffer</code> 中所有的列都至少有一个元素”进行了判断：<code class="highlighter-rouge">buffer.allSatisfy({ !$0.isEmpty })</code>，这也是一个 <code class="highlighter-rouge">O(n)</code>。一种更简单的方式，是维护一个变量来记录当前已经收到的可合并值的个数：在每次收到值时，判断 <code class="highlighter-rouge">buffer</code> 对应的位置上是否已经有值，来确定需不需要更改这个变量。如果发现已经收到的可合并值的个数与 publishers 的数量相等的话，就说明所有数据都已经准备就绪，可以将它们 <code class="highlighter-rouge">zip</code> 并发送。通过这样一个变量，我们可以把这里的 <code class="highlighter-rouge">O(n)</code> 也简化为 <code class="highlighter-rouge">O(1)</code>。甚至更进一步，可以自然而然地做到去掉上面提到的 <code class="highlighter-rouge">buffer.count</code> 循环，把整个发送流程优化到 <code class="highlighter-rouge">O(1)</code>。</p>
+
+<h3 id="有限-demand">有限 Demand</h3>
+
+<p>除了速度优化外，<code class="highlighter-rouge">ZipAll</code> 现在的行为逻辑也有值得商榷的地方。在 <code class="highlighter-rouge">startSubscribing</code> 里，我们简单地使用了 <code class="highlighter-rouge">sink</code> 来对输入的 <code class="highlighter-rouge">publishers</code> 进行订阅。<code class="highlighter-rouge">Sink</code> subscriber 在通过 <code class="highlighter-rouge">receive(subscription:)</code> 接收到订阅后，会立即 <code class="highlighter-rouge">request(_:)</code> <code class="highlighter-rouge">.unlimited</code> 的 <code class="highlighter-rouge">Subscribers.Demand</code>。这其实没有尊重 Combine 事件的拉取模型原则：在我们的 <code class="highlighter-rouge">ZipAll</code> 实现中，下游订阅者可以通过控制 <code class="highlighter-rouge">Demand</code> 来控制收到的值的数量，但是内部的 <code class="highlighter-rouge">publishers</code> 的订阅却可以接受无限多的值。这么一来，一旦在 <code class="highlighter-rouge">ZipAll</code> 内部产生 back pressure，比如外部所需要的值的频率小于内部 publishers 产生值的频率的话，<code class="highlighter-rouge">buffer</code> 将可以大量积压，导致内存问题。实际上，我们可以根据下游订阅者需要的值的数量，来决定我们所需要的 publishers 给我们的值的数量。这样，我们就能将 back pressure 的处理也应用到被 zip 的 publishers 中去，从而避免溢出问题。</p>
+
+<p>相对于使用 <code class="highlighter-rouge">Sink</code>，我们可以用 <code class="highlighter-rouge">AnySubscriber</code> 来在更细的力度上进行一些控制。比如在收到订阅后只请求有限个事件，在收到新值时尊重下游订阅的 <code class="highlighter-rouge">Demand</code> 等：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">AnySubscriber</span><span class="p">(</span>
+    <span class="nv">receiveSubscription</span><span class="p">:</span> <span class="p">{</span> <span class="n">subscription</span> <span class="k">in</span>
+        
+    <span class="p">},</span> 
+    <span class="nv">receiveValue</span><span class="p">:</span> <span class="p">{</span> <span class="n">value</span> <span class="o">-&gt;</span> <span class="kt">Subscribers</span><span class="o">.</span><span class="kt">Demand</span> <span class="k">in</span>
+    
+    <span class="p">},</span> 
+    <span class="nv">receiveCompletion</span><span class="p">:</span> <span class="p">{</span> <span class="n">completion</span> <span class="k">in</span> 
+
+    <span class="p">}</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="总结">总结</h2>
+
+<p>可以看出，文中给出的实现有不少缺点，这个参考实现更多地是为了以最简单的方式说明自定义 <code class="highlighter-rouge">Publisher</code> 的一般方法，还远远没有达到可以用在产品代码中的质量。不过，通过这种直接的例子，我们可以总结出一些实现自定义 <code class="highlighter-rouge">Publisher</code> 时的一般经验：</p>
+
+<ol>
+  <li><code class="highlighter-rouge">Publisher</code> 的接口和它需要完成的任务是相对固定的，遵循 Combine 的工作流程图，来实现其中各个职责类型的必要方法即可。</li>
+  <li>如果没有特殊的需求，一般我们会将 <code class="highlighter-rouge">Publisher</code> 定义为 <code class="highlighter-rouge">struct</code> 而非 <code class="highlighter-rouge">class</code>，这可以让内存管理和多次订阅的行为更加容易预测。但是，如果一个 <code class="highlighter-rouge">Publisher</code> 有需要共享的话，应该将它定义为引用语义，比如 <a href="https://developer.apple.com/documentation/combine/publishers/share"><code class="highlighter-rouge">Publishers.Share</code></a>。</li>
+  <li>相对于 <code class="highlighter-rouge">Publisher</code>，大部分有关时序的操作都被封装到了 <code class="highlighter-rouge">Subscription</code> 里。作为 <code class="highlighter-rouge">Publisher</code> 和 <code class="highlighter-rouge">Subscriber</code> 之间通讯的桥梁，<code class="highlighter-rouge">Subscription</code> 负责大部分逻辑，并维护 Combine 流程的正确性。一般来说，这也是在自定义 <code class="highlighter-rouge">Publisher</code> 时我们花费最多时间的地方。</li>
+  <li>想要确保你的自定义 <code class="highlighter-rouge">Publisher</code> 能在 Combine 的世界中运行良好，需要遵守基本的规则。比如尊重下游的 demand，考虑性能因素等。</li>
+</ol>
+
+<h2 id="练习">练习</h2>
+
+<p>为了保持和<a href="(https://objccn.io/products/swift-ui)">《SwiftUI 和 Combine 编程》</a>这本书的形式上的类似，我也准备了一些小练习，希望能帮助读者通过实际动手练习掌握本文的内容。</p>
+
+<h3 id="1-优化-zipall">1. 优化 <code class="highlighter-rouge">ZipAll</code></h3>
+
+<p>上面提出了关于优化 <code class="highlighter-rouge">ZipAll</code> 的一些想法，包括运行性能的优化和防止 <code class="highlighter-rouge">buffer</code> 堆积等。请你在力所能及的范围内对 <code class="highlighter-rouge">ZipAll</code> 进行修改和优化，并架设一些性能测试来验证你的修改确实发挥了作用。</p>
+
+<blockquote>
+  <p>提示，一般来说，在测试中我们可以使用 <code class="highlighter-rouge">PassthroughSubject</code> 作为数据源，并通过 <a href="https://developer.apple.com/documentation/xctest/xctestcase/1496290-measure"><code class="highlighter-rouge">measure(_:)</code></a> 来设立性能测试。如果在尝试后你还是对如何优化没有概念的话，不妨可以参考 RxSwift 中关于 ZipAll 的这个<a href="https://github.com/ReactiveX/RxSwift/blob/master/RxSwift/Observables/Zip%2BCollection.swift">高效实现</a>。</p>
+</blockquote>
+
+<h3 id="2-实现-combinelatestall">2. 实现 <code class="highlighter-rouge">CombineLatestAll</code></h3>
+
+<p>和 <code class="highlighter-rouge">Zip</code> 相对应的操作是 <code class="highlighter-rouge">CombineLatest</code>，我们对它应该已经非常熟悉了：和 <code class="highlighter-rouge">Zip</code> 等待<strong>所有</strong> <code class="highlighter-rouge">Publisher</code> 都发出值不同，它会在<strong>任意</strong> <code class="highlighter-rouge">Publisher</code> 发出值后即把各个 <code class="highlighter-rouge">Publisher</code> 的最新值合并且向外发送。Combine 中也只实现了 <code class="highlighter-rouge">CombineLatest</code>，<code class="highlighter-rouge">CombineLatest3</code> 和 <code class="highlighter-rouge">CombineLatest4</code>，但是没有更一般的接受任意多个 <code class="highlighter-rouge">Publisher</code> 的 <code class="highlighter-rouge">CombineLatestAll</code>。请你仿照 <code class="highlighter-rouge">ZipAll</code> 的方式，实现自定义的 <code class="highlighter-rouge">CombineLatestAll</code>。</p>
+:ET

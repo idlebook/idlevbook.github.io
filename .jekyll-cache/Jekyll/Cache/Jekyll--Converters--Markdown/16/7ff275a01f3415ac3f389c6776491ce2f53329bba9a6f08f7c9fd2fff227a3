@@ -1,0 +1,193 @@
+I"�t<p>这是我的WWDC2013系列笔记中的一篇，完整的笔记列表请参看<a href="http://onevcat.com/2013/06/developer-should-know-about-ios7/">这篇总览</a>。本文仅作为个人记录使用，也欢迎在<a href="http://creativecommons.org/licenses/by-nc/3.0/deed.zh">许可协议</a>范围内转载或使用，但是还烦请保留原文链接，谢谢您的理解合作。如果您觉得本站对您能有帮助，您可以使用<a href="http://onevcat.com/atom.xml">RSS</a>或<a href="http://eepurl.com/wNSkj">邮件</a>方式订阅本站，这样您将能在第一时间获取本站信息。</p>
+
+<p>本文涉及到的WWDC2013 Session有</p>
+
+<ul>
+  <li>Session 206 Getting Started with UIKit Dynamics</li>
+  <li>Session 217 Exploring Scroll Views in iOS7</li>
+</ul>
+
+<p>UIScrollView可以说是UIKit中最重要的类之一了，包括UITableView和UICollectionView等重要的数据容器类都是UIScrollView的子类。在历年的WWDC上，UIScrollView和相关的API都有专门的主题进行介绍，也可以看出这个类的使用和变化之快。今年也不例外，因为iOS7完全重新定义了UI，这使得UIScrollView里原来不太会使用的一些用法和实现的效果在新的系统中得到了很好的表现。另外，由于引入了UIKit Dynamics，我们还可以结合ScrollView做出一些以前不太可能或者需要花费很大力气来实现的效果，包括带有重力的swipe或者是类似新的信息app中的带有弹簧效果聊天泡泡等。如果您还不太了解iOS7中信息app的效果，这里有一张gif图可以帮您大概了解一下：</p>
+
+<p><img src="/assets/images/2013/ios7-message-app-spring.gif" alt="iOS7中信息app的弹簧效果" /></p>
+
+<p>这次笔记的内容主要就是实现一个这样的效果。为了避免重复造轮子，我对这个效果进行了一些简单的封装，并连同这篇笔记的demo一起扔在了Github上，有需要的童鞋可以<a href="https://github.com/onevcat/VVSpringCollectionViewFlowLayout">到这里</a>自取。</p>
+
+<p>iOS7的SDK中Apple最大的野心其实是想用SpriteKit来结束iOS平台游戏开发（至少是2D游戏开发）的乱战，统一游戏开发的方式并建立良性社区。而UIKit Dynamics，个人猜测Apple在花费力气为SpriteKit开发了物理引擎的同时，发现在UIKit中也可以使用，并能得到不错的效果，于是顺便革新了一下设计理念，在UI设计中引入了不少物理的概念。在iOS系统中，最为典型的应用是锁屏界面打开相机时中途放弃后的重力下坠+反弹的效果，另一个就是信息应用中的加入弹性的消息列表了。弹性列表在我自己上手试过以后觉得表现形式确实很生动，可以消除原来列表那种冷冰冰的感觉，是有可能在今后的设计中被大量使用的，因此决定学上一学。</p>
+
+<p>首先我们需要知道要如何实现这样一种效果，我们会用到哪些东西。毋庸置疑，如果不使用UIKit Dynamics的话，自己从头开始来完成会是一件非常费力的事情，你可能需要实现一套位置计算和物理模拟来使效果看起来真实滑润。而UIKit Dynamics中已经给我们提供了现成的弹簧效果，可以用<code class="highlighter-rouge">UIAttachmentBehavior</code>进行实现。另外，在说到弹性效果的时候，我们其实是在描述一个列表中的各个cell之间的关系，对于传统的UITableView来说，描述UITableViewCell之间的关系是比较复杂的（因为Apple已经把绝大多数工作做了，包括计算cell位置和位移等。使用越简单，定制就会越麻烦在绝大多数情况下都是真理）。而UICollectionView则通过layout来完成cell之间位置关系的描述，给了开发者较大的空间来实现布局。另外，UIKit Dynamics为UICollectionView做了很多方便的Catagory，可以很容易地“指导”UICollectionView利用加入物理特性计算后的结果，在实现弹性效果的时候，UICollectionView是我们不二的选择。</p>
+
+<p>如果您在阅读这篇笔记的时候遇到困难的话，建议您可以看看我之前的一些笔记，包括今年的<a href="http://onevcat.com/2013/06/uikit-dynamics-started/">UIKit Dynamics的介绍</a>和去年的<a href="http://onevcat.com/2012/06/introducing-collection-views/">UICollectionView介绍</a>。</p>
+
+<p>话不多说，我们开工。首先准备一个UICollectionViewFlowLayout的子类（在这里叫做<code class="highlighter-rouge">VVSpringCollectionViewFlowLayout</code>），然后在ViewController中用这个layout实现一个简单的collectionView：</p>
+
+<div class="language-objc highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//ViewController.m</span>
+
+<span class="k">@interface</span> <span class="nc">ViewController</span> <span class="p">()</span><span class="o">&lt;</span><span class="n">UICollectionViewDataSource</span><span class="p">,</span> <span class="n">UICollectionViewDelegate</span><span class="o">&gt;</span>
+<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">VVSpringCollectionViewFlowLayout</span> <span class="o">*</span><span class="n">layout</span><span class="p">;</span>
+<span class="k">@end</span>
+
+<span class="k">static</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">reuseId</span> <span class="o">=</span> <span class="s">@"collectionViewCellReuseId"</span><span class="p">;</span>
+
+<span class="k">@implementation</span> <span class="nc">ViewController</span>
+<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">viewDidLoad</span>
+<span class="p">{</span>
+    <span class="p">[</span><span class="n">super</span> <span class="nf">viewDidLoad</span><span class="p">];</span>
+	<span class="c1">// Do any additional setup after loading the view, typically from a nib.</span>
+    
+	<span class="n">self</span><span class="p">.</span><span class="n">layout</span> <span class="o">=</span> <span class="p">[[</span><span class="n">VVSpringCollectionViewFlowLayout</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">init</span><span class="p">];</span>
+    <span class="n">self</span><span class="p">.</span><span class="n">layout</span><span class="p">.</span><span class="n">itemSize</span> <span class="o">=</span> <span class="n">CGSizeMake</span><span class="p">(</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">frame</span><span class="p">.</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="mi">44</span><span class="p">);</span>
+    <span class="n">UICollectionView</span> <span class="o">*</span><span class="n">collectionView</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UICollectionView</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">initWithFrame</span><span class="p">:</span><span class="n">self</span><span class="p">.</span><span class="n">view</span><span class="p">.</span><span class="n">frame</span> <span class="nf">collectionViewLayout</span><span class="p">:</span><span class="n">self</span><span class="p">.</span><span class="n">layout</span><span class="p">];</span>
+    
+    <span class="n">collectionView</span><span class="p">.</span><span class="n">backgroundColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="nf">clearColor</span><span class="p">];</span>
+    
+    <span class="p">[</span><span class="n">collectionView</span> <span class="nf">registerClass</span><span class="p">:[</span><span class="n">UICollectionViewCell</span> <span class="nf">class</span><span class="p">]</span> <span class="nf">forCellWithReuseIdentifier</span><span class="p">:</span><span class="n">reuseId</span><span class="p">];</span>
+    
+    <span class="n">collectionView</span><span class="p">.</span><span class="n">dataSource</span> <span class="o">=</span> <span class="n">self</span><span class="p">;</span>
+    <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">view</span> <span class="nf">insertSubview</span><span class="p">:</span><span class="n">collectionView</span> <span class="nf">atIndex</span><span class="p">:</span><span class="mi">0</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="cp">#pragma mark - UICollectionViewDataSource
+</span><span class="k">-</span> <span class="p">(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nf">collectionView</span><span class="p">:(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span> <span class="nf">numberOfItemsInSection</span><span class="p">:(</span><span class="n">NSInteger</span><span class="p">)</span><span class="nv">section</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="mi">50</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">-</span> <span class="p">(</span><span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="p">)</span><span class="nf">collectionView</span><span class="p">:(</span><span class="n">UICollectionView</span> <span class="o">*</span><span class="p">)</span><span class="nv">collectionView</span> <span class="nf">cellForItemAtIndexPath</span><span class="p">:(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span>
+<span class="p">{</span>
+    <span class="n">UICollectionViewCell</span> <span class="o">*</span><span class="n">cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">collectionView</span> <span class="nf">dequeueReusableCellWithReuseIdentifier</span><span class="p">:</span><span class="n">reuseId</span> <span class="nf">forIndexPath</span><span class="p">:</span><span class="n">indexPath</span><span class="p">];</span>
+    
+    <span class="c1">//Just give a random color to the cell. See https://gist.github.com/kylefox/1689973</span>
+    <span class="n">cell</span><span class="p">.</span><span class="n">contentView</span><span class="p">.</span><span class="n">backgroundColor</span> <span class="o">=</span> <span class="p">[</span><span class="n">UIColor</span> <span class="nf">randomColor</span><span class="p">];</span>
+    <span class="k">return</span> <span class="n">cell</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">@end</span>
+</code></pre></div></div>
+
+<p>这部分没什么可以多说的，现在我们有一个标准的FlowLayout的UICollectionView了。通过使用UICollectionViewFlowLayout的子类来作为开始的layout，我们可以节省下所有的初始cell位置计算的代码，在上面代码的情况下，这个collectionView的表现和一个普通的tableView并没有太大不同。接下来我们着重来看看要如何实现弹性的layout。对于弹性效果，我们需要的是连接一个item和一个锚点间弹性连接的<code class="highlighter-rouge">UIAttachmentBehavior</code>，并能在滚动时设置新的锚点位置。我们在scroll的时候，只要使用UIKit Dynamics的计算结果，替代掉原来的位置更新计算（其实就是简单的scrollView的contentOffset的改变），就可以模拟出弹性的效果了。</p>
+
+<p>首先在<code class="highlighter-rouge">-prepareLayout</code>中为cell添加<code class="highlighter-rouge">UIAttachmentBehavior</code>。</p>
+
+<div class="language-objc highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//VVSpringCollectionViewFlowLayout.m</span>
+<span class="k">@interface</span> <span class="nc">VVSpringCollectionViewFlowLayout</span><span class="p">()</span>
+<span class="k">@property</span> <span class="p">(</span><span class="n">nonatomic</span><span class="p">,</span> <span class="n">strong</span><span class="p">)</span> <span class="n">UIDynamicAnimator</span> <span class="o">*</span><span class="n">animator</span><span class="p">;</span>
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">VVSpringCollectionViewFlowLayout</span>
+<span class="c1">//...</span>
+
+<span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">prepareLayout</span> <span class="p">{</span>
+    <span class="p">[</span><span class="n">super</span> <span class="nf">prepareLayout</span><span class="p">];</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">_animator</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">_animator</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIDynamicAnimator</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">initWithCollectionViewLayout</span><span class="p">:</span><span class="n">self</span><span class="p">];</span>
+        <span class="n">CGSize</span> <span class="n">contentSize</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="nf">collectionViewContentSize</span><span class="p">];</span>
+        <span class="n">NSArray</span> <span class="o">*</span><span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nf">layoutAttributesForElementsInRect</span><span class="p">:</span><span class="n">CGRectMake</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">contentSize</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="n">contentSize</span><span class="p">.</span><span class="n">height</span><span class="p">)];</span>
+        
+        <span class="k">for</span> <span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">item</span> <span class="k">in</span> <span class="n">items</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">spring</span> <span class="o">=</span> <span class="p">[[</span><span class="n">UIAttachmentBehavior</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">initWithItem</span><span class="p">:</span><span class="n">item</span> <span class="nf">attachedToAnchor</span><span class="p">:</span><span class="n">item</span><span class="p">.</span><span class="n">center</span><span class="p">];</span>
+            
+            <span class="n">spring</span><span class="p">.</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="n">spring</span><span class="p">.</span><span class="n">damping</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">;</span>
+            <span class="n">spring</span><span class="p">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">8</span><span class="p">;</span>
+            
+            <span class="p">[</span><span class="n">_animator</span> <span class="nf">addBehavior</span><span class="p">:</span><span class="n">spring</span><span class="p">];</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="k">@end</span>
+</code></pre></div></div>
+
+<p>prepareLayout将在CollectionView进行排版的时候被调用。首先当然是call一下super的prepareLayout，你肯定不会想要全都要自己进行设置的。接下来，如果是第一次调用这个方法的话，先初始化一个UIDynamicAnimator实例，来负责之后的动画效果。iOS7 SDK中，UIDynamicAnimator类专门有一个针对UICollectionView的Category，以使UICollectionView能够轻易地利用UIKit Dynamics的结果。在<code class="highlighter-rouge">UIDynamicAnimator.h</code>中能够找到这个Category：</p>
+
+<div class="language-objc highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">@interface</span> <span class="nc">UIDynamicAnimator</span> <span class="p">(</span><span class="nl">UICollectionViewAdditions</span><span class="p">)</span>
+
+<span class="c1">// When you initialize a dynamic animator with this method, you should only associate collection view layout attributes with your behaviors.</span>
+<span class="c1">// The animator will employ thecollection view layout’s content size coordinate system.</span>
+<span class="k">-</span> <span class="p">(</span><span class="n">instancetype</span><span class="p">)</span><span class="nf">initWithCollectionViewLayout</span><span class="p">:(</span><span class="n">UICollectionViewLayout</span><span class="o">*</span><span class="p">)</span><span class="nv">layout</span><span class="p">;</span>
+
+<span class="c1">// The three convenience methods returning layout attributes (if associated to behaviors in the animator) if the animator was configured with collection view layout</span>
+<span class="k">-</span> <span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span><span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForCellAtIndexPath</span><span class="p">:(</span><span class="n">NSIndexPath</span><span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span><span class="p">;</span>
+<span class="k">-</span> <span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span><span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForSupplementaryViewOfKind</span><span class="p">:(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">kind</span> <span class="nf">atIndexPath</span><span class="p">:(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span><span class="p">;</span>
+<span class="k">-</span> <span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span><span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForDecorationViewOfKind</span><span class="p">:(</span><span class="n">NSString</span><span class="o">*</span><span class="p">)</span><span class="nv">decorationViewKind</span> <span class="nf">atIndexPath</span><span class="p">:(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span><span class="p">;</span>
+
+<span class="k">@end</span>
+</code></pre></div></div>
+
+<p>于是通过<code class="highlighter-rouge">-initWithCollectionViewLayout:</code>进行初始化后，这个UIDynamicAnimator实例便和我们的layout进行了绑定，之后这个layout对应的attributes都应该由绑定的UIDynamicAnimator的实例给出。就像下面这样：</p>
+
+<div class="language-objc highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//VVSpringCollectionViewFlowLayout.m</span>
+<span class="k">@implementation</span> <span class="nc">VVSpringCollectionViewFlowLayout</span>
+
+<span class="c1">//...</span>
+
+<span class="k">-</span><span class="p">(</span><span class="n">NSArray</span> <span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForElementsInRect</span><span class="p">:(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">rect</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_animator</span> <span class="nf">itemsInRect</span><span class="p">:</span><span class="n">rect</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="k">-</span><span class="p">(</span><span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="p">)</span><span class="nf">layoutAttributesForItemAtIndexPath</span><span class="p">:(</span><span class="n">NSIndexPath</span> <span class="o">*</span><span class="p">)</span><span class="nv">indexPath</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_animator</span> <span class="nf">layoutAttributesForCellAtIndexPath</span><span class="p">:</span><span class="n">indexPath</span><span class="p">];</span>
+<span class="p">}</span>
+<span class="k">@end</span>
+</code></pre></div></div>
+
+<p>让我们回到<code class="highlighter-rouge">-prepareLayout</code>方法中，在创建了UIDynamicAnimator实例后，我们对于这个layout中的每个attributes对应的点，都创建并添加一个添加一个<code class="highlighter-rouge">UIAttachmentBehavior</code>（在iOS7 SDK中，UICollectionViewLayoutAttributes已经实现了UIDynamicItem接口，可以直接参与UIKit Dynamic的计算中去）。创建时我们希望collectionView的每个cell就保持在原位，因此我们设定了锚点为当前attribute本身的center。</p>
+
+<p>接下来我们考虑滑动时的弹性效果的实现。在系统的信息app中，我们可以看到弹性效果有两个特点：</p>
+
+<ul>
+  <li>随着滑动的速度增大，初始的拉伸和压缩的幅度将变大</li>
+  <li>随着cell距离屏幕触摸位置越远，拉伸和压缩的幅度</li>
+</ul>
+
+<p>对于考虑到这两方面的特点，我们所期望的滑动时的各cell锚点的变化应该是类似这样的：</p>
+
+<p><img src="/assets/images/2013/spring-list-ios7.png" alt="向上拖动时的锚点变化示意" /></p>
+
+<p>现在我们来实现这个锚点的变化。既然都是滑动，我们是不是可以考虑在UIScrollView的<code class="highlighter-rouge">–scrollViewDidScroll:</code>委托方法中来设定新的Behavior锚点值呢？理论上来说当然是可以的，但是如果这样的话我们大概就不得不面临着将刚才的layout实例设置为collectionView的delegate这样一个事实。但是我们都知道layout应该做的事情是给collectionView提供必要的布局信息，而不应该负责去处理它的委托事件。处理collectionView的回调更恰当地应该由处于collectionView的controller层级的类来完成，而不应该由一个给collectionView提供数据和信息的类来响应。在<code class="highlighter-rouge">UICollectionViewLayout</code>中，我们有一个叫做<code class="highlighter-rouge">-shouldInvalidateLayoutForBoundsChange:</code>的方法，每次layout的bounds发生变化的时候，collectionView都会询问这个方法是否需要为这个新的边界和更新layout。一般情况下只要layout没有根据边界不同而发生变化的话，这个方法直接不做处理地返回NO，表示保持现在的layout即可，而每次bounds改变时这个方法都会被调用的特点正好可以满足我们更新锚点的需求，因此我们可以在这里面完成锚点的更新。</p>
+
+<div class="language-objc highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//VVSpringCollectionViewFlowLayout.m</span>
+<span class="k">@implementation</span> <span class="nc">VVSpringCollectionViewFlowLayout</span>
+
+<span class="c1">//...</span>
+
+<span class="k">-</span><span class="p">(</span><span class="n">BOOL</span><span class="p">)</span><span class="nf">shouldInvalidateLayoutForBoundsChange</span><span class="p">:(</span><span class="n">CGRect</span><span class="p">)</span><span class="nv">newBounds</span> <span class="p">{</span>
+    <span class="n">UIScrollView</span> <span class="o">*</span><span class="n">scrollView</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="n">collectionView</span><span class="p">;</span>
+    <span class="n">CGFloat</span> <span class="n">scrollDelta</span> <span class="o">=</span> <span class="n">newBounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">scrollView</span><span class="p">.</span><span class="n">bounds</span><span class="p">.</span><span class="n">origin</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+    
+    <span class="c1">//Get the touch point</span>
+    <span class="n">CGPoint</span> <span class="n">touchLocation</span> <span class="o">=</span> <span class="p">[</span><span class="n">scrollView</span><span class="p">.</span><span class="n">panGestureRecognizer</span> <span class="nf">locationInView</span><span class="p">:</span><span class="n">scrollView</span><span class="p">];</span>
+    
+    <span class="k">for</span> <span class="p">(</span><span class="n">UIAttachmentBehavior</span> <span class="o">*</span><span class="n">spring</span> <span class="k">in</span> <span class="n">_animator</span><span class="p">.</span><span class="n">behaviors</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">CGPoint</span> <span class="n">anchorPoint</span> <span class="o">=</span> <span class="n">spring</span><span class="p">.</span><span class="n">anchorPoint</span><span class="p">;</span>
+        
+        <span class="n">CGFloat</span> <span class="n">distanceFromTouch</span> <span class="o">=</span> <span class="n">fabsf</span><span class="p">(</span><span class="n">touchLocation</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">anchorPoint</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+        <span class="n">CGFloat</span> <span class="n">scrollResistance</span> <span class="o">=</span> <span class="n">distanceFromTouch</span> <span class="o">/</span> <span class="mi">500</span><span class="p">;</span>
+        
+        <span class="n">UICollectionViewLayoutAttributes</span> <span class="o">*</span><span class="n">item</span> <span class="o">=</span> <span class="p">[</span><span class="n">spring</span><span class="p">.</span><span class="n">items</span> <span class="nf">firstObject</span><span class="p">];</span>
+        <span class="n">CGPoint</span> <span class="n">center</span> <span class="o">=</span> <span class="n">item</span><span class="p">.</span><span class="n">center</span><span class="p">;</span>
+
+		<span class="c1">//In case the added value bigger than the scrollDelta, which leads an unreasonable effect</span>
+        <span class="n">center</span><span class="p">.</span><span class="n">y</span> <span class="o">+=</span> <span class="p">(</span><span class="n">scrollDelta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">?</span> <span class="n">MIN</span><span class="p">(</span><span class="n">scrollDelta</span><span class="p">,</span> <span class="n">scrollDelta</span> <span class="o">*</span> <span class="n">scrollResistance</span><span class="p">)</span>
+                                      <span class="p">:</span> <span class="n">MAX</span><span class="p">(</span><span class="n">scrollDelta</span><span class="p">,</span> <span class="n">scrollDelta</span> <span class="o">*</span> <span class="n">scrollResistance</span><span class="p">);</span>
+        <span class="n">item</span><span class="p">.</span><span class="n">center</span> <span class="o">=</span> <span class="n">center</span><span class="p">;</span>
+        
+        <span class="p">[</span><span class="n">_animator</span> <span class="nf">updateItemUsingCurrentState</span><span class="p">:</span><span class="n">item</span><span class="p">];</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">NO</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">@end</span>
+</code></pre></div></div>
+
+<p>首先我们计算了这次scroll的距离<code class="highlighter-rouge">scrollDelta</code>，为了得到每个item与触摸点的之间的距离，我们当然还需要知道触摸点的坐标<code class="highlighter-rouge">touchLocation</code>。接下来，可以根据距离对每个锚点进行设置了：简单地计算了原来锚点与触摸点之间的距离<code class="highlighter-rouge">distanceFromTouch</code>，并由此计算一个系数。接下来，对于当前的item，我们获取其当前锚点位置，然后将其根据<code class="highlighter-rouge">scrollDelta</code>的数值和刚才计算的系数，重新设定锚点的位置。最后我们需要告诉UIDynamicAnimator我们已经完成了对冒点的更新，现在可以开始更新物理计算，并随时准备collectionView来取LayoutAttributes的数据了。</p>
+
+<p>也许你还没有缓过神来？但是我们确实已经做完了，让我们来看看实际的效果吧：</p>
+
+<p><img src="/assets/images/2013/spring-collection-view-over-ios7.gif" alt="带有弹性效果的collecitonView" /></p>
+
+<p>当然，通过调节<code class="highlighter-rouge">damping</code>，<code class="highlighter-rouge">frequency</code>和<code class="highlighter-rouge">scrollResistance</code>的系数等参数，可以得到弹性不同的效果，比如更多的震荡或者更大的幅度等等。</p>
+
+<p>这个layout实现起来非常简单，我顺便封装了一下放到了Github上，大家有需要的话可以<a href="https://github.com/onevcat/VVSpringCollectionViewFlowLayout">点击这里下载</a>并直接使用。</p>
+
+:ET

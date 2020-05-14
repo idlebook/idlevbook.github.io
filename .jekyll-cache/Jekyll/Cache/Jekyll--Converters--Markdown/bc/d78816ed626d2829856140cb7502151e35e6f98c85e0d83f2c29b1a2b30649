@@ -1,0 +1,2 @@
+I"m<p>其实这篇文章的缘起是由于在对 <a href="https://github.com/onevcat/Kingfisher/">Kingfisher</a> 做重构的时候，因为自己对 <code class="highlighter-rouge">defer</code> 的理解不够准确，导致了一个 bug。所以想藉由这篇文章探索一下 <code class="highlighter-rouge">defer</code> 这个关键字的一些 edge case。</p>
+:ET

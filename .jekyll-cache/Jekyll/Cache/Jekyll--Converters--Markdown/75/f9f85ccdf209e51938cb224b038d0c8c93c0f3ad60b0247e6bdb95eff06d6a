@@ -1,0 +1,2 @@
+I",<p>2018 年 3 月的时候我写过一篇在 Swift 中如何<a href="https://xiaozhuanlan.com/topic/6104325798">改进 Delegate Pattern</a> 的文章，主要思想是用遮蔽变量 (shadow variable) 声明的方式，来保证 <code class="highlighter-rouge">self</code> 变量可以被常时地标记为 <code class="highlighter-rouge">weak</code>。本文中，为了保证没有看过原文的读者能处在同一频道，我会先 (再次) 简单介绍一下这种方法。然后，结合 Swift 5.2 的新特性提出一些小的改进方式。</p>
+:ET

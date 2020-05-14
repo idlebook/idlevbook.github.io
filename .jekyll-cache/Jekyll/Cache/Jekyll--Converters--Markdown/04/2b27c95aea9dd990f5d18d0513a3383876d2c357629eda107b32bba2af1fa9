@@ -1,0 +1,6 @@
+I"�<blockquote>
+  <p>写在前面：<a href="https://objccn.io">ObjC 中国</a> (或者说我个人) 现在正和 objc.io 合作打造一本关于 <a href="https://www.objc.io/books/app-architecture/">app 架构</a>的书籍。英文版本已经提前预售，书本身也进入了最后的 review 阶段。我们也将在第一时间进行本书中文版的工作，还请大家关注。</p>
+
+  <p>本文的内容也是有关 app 架构的一些思考，如果你对架构方面的话题有兴趣的话，我之前还写过一篇利用 reducer 的<a href="https://onevcat.com/2017/07/state-based-viewcontroller/">单向数据流动的函数式 View Controller</a> 的文章可供参考。</p>
+</blockquote>
+:ET

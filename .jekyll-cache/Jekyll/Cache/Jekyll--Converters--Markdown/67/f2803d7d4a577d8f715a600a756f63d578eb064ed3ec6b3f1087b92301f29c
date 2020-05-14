@@ -1,0 +1,225 @@
+I"��<p><img src="/assets/images/2019/swift-ui.png" alt="" /></p>
+
+<blockquote>
+  <p>我已经计划写一本关于 SwiftUI 和 Combine 编程的书籍，希望能通过一些实践案例帮助您快速上手 SwiftUI 及 Combine 响应式编程框架，掌握下一代客户端 UI 开发技术。现在这本书已经开始预售，预计能在 10 月左右完成。如果您对此有兴趣，可以查看 <a href="https://objccn.io/products/">ObjC 中国的产品页面</a>了解详情及购买。十分感谢！</p>
+</blockquote>
+
+<p>接<a href="https://onevcat.com/2019/06/swift-ui-firstlook/">上一篇</a>继续对 SwiftUI 的教程进行一些解读。</p>
+
+<h3 id="教程-2---building-lists-and-navigation"><a href="https://developer.apple.com/tutorials/swiftui/building-lists-and-navigation">教程 2 - Building Lists and Navigation</a></h3>
+
+<h4 id="section-4---step-2-静态-list"><a href="https://developer.apple.com/tutorials/swiftui/building-lists-and-navigation#create-the-list-of-landmarks">Section 4 - Step 2: 静态 <code class="highlighter-rouge">List</code></a></h4>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">var</span> <span class="nv">body</span><span class="p">:</span> <span class="kd">some</span> <span class="kt">View</span> <span class="p">{</span>
+    <span class="kt">List</span> <span class="p">{</span>
+        <span class="kt">LandmarkRow</span><span class="p">(</span><span class="nv">landmark</span><span class="p">:</span> <span class="n">landmarkData</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="kt">LandmarkRow</span><span class="p">(</span><span class="nv">landmark</span><span class="p">:</span> <span class="n">landmarkData</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>这里的 <code class="highlighter-rouge">List</code> 和 <code class="highlighter-rouge">HStack</code> 或者 <code class="highlighter-rouge">VStack</code> 之类的容器很相似，接受一个 view builder 并采用 View DSL 的方式列举了两个 <code class="highlighter-rouge">LandmarkRow</code>。这种方式构建了对应着 <code class="highlighter-rouge">UITableView</code> 的静态 cell 的组织方式。</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">content</span><span class="p">:</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Content</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>我们可以运行 app，并使用 Xcode 的 View Hierarchy 工具来观察 UI，结果可能会让你觉得很眼熟：</p>
+
+<p><img src="https://images.xiaozhuanlan.com/photo/2019/a900c8d2687dab13ba438602da826552.png" alt="" /></p>
+
+<p>实际上在屏幕上绘制的 <code class="highlighter-rouge">UpdateCoalesingTableView</code> 是一个 <code class="highlighter-rouge">UITableView</code> 的子类，而两个 cell <code class="highlighter-rouge">ListCoreCellHost</code> 也是 <code class="highlighter-rouge">UITableViewCell</code> 的子类。对于 <code class="highlighter-rouge">List</code> 来说，SwiftUI 底层直接使用了成熟的 <code class="highlighter-rouge">UITableView</code> 的一套实现逻辑，而并非重新进行绘制。相比起来，像是 <code class="highlighter-rouge">Text</code> 或者 <code class="highlighter-rouge">Image</code> 这样的单一 <code class="highlighter-rouge">View</code> 在 <code class="highlighter-rouge">UIKit</code> 层则全部统一由 <code class="highlighter-rouge">DisplayList.ViewUpdater.Platform.CGDrawingView</code> 这个 <code class="highlighter-rouge">UIView</code> 的子类进行绘制。</p>
+
+<p>不过在使用 SwiftUI 时，我们首先需要做的就是跳出 UIKit 的思维方式，不应该去关心背后的绘制和实现。使用 <code class="highlighter-rouge">UITableView</code> 来表达 <code class="highlighter-rouge">List</code> 也许只是权宜之计，也许在未来也会被另外更高效的绘制方式取代。由于 SwiftUI 层只是 <code class="highlighter-rouge">View</code> 描述的数据抽象，因此和 React 的 Virtual DOM 以及 Flutter 的 Widget 一样，背后的具体绘制方式是完全解耦合，并且可以进行替换的。这为今后 SwiftUI 更进一步留出了足够的可能性。</p>
+
+<h4 id="section-5---step-2-动态-list-和-identifiable"><a href="https://developer.apple.com/tutorials/swiftui/building-lists-and-navigation#make-the-list-dynamic">Section 5 - Step 2: 动态 <code class="highlighter-rouge">List</code> 和 <code class="highlighter-rouge">Identifiable</code></a></h4>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">List</span><span class="p">(</span><span class="n">landmarkData</span><span class="o">.</span><span class="nf">identified</span><span class="p">(</span><span class="nv">by</span><span class="p">:</span> <span class="p">\</span><span class="o">.</span><span class="n">id</span><span class="p">))</span> <span class="p">{</span> <span class="n">landmark</span> <span class="k">in</span>
+    <span class="kt">LandmarkRow</span><span class="p">(</span><span class="nv">landmark</span><span class="p">:</span> <span class="n">landmark</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>除了静态方式以外，<code class="highlighter-rouge">List</code> 当然也可以接受动态方式的输入，这时使用的初始化方法和上面静态的情况不一样：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">List</span><span class="o">&lt;</span><span class="kt">Selection</span><span class="p">,</span> <span class="kt">Content</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">Selection</span> <span class="p">:</span> <span class="kt">SelectionManager</span><span class="p">,</span> <span class="kt">Content</span> <span class="p">:</span> <span class="kt">View</span> <span class="p">{</span>
+    <span class="kd">public</span> <span class="kd">init</span><span class="o">&lt;</span><span class="kt">Data</span><span class="p">,</span> <span class="kt">RowContent</span><span class="o">&gt;</span><span class="p">(</span>
+        <span class="n">_</span> <span class="nv">data</span><span class="p">:</span> <span class="kt">Data</span><span class="p">,</span> <span class="nv">action</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Data</span><span class="o">.</span><span class="kt">Element</span><span class="o">.</span><span class="kt">IdentifiedValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">,</span>
+        <span class="nv">rowContent</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Data</span><span class="o">.</span><span class="kt">Element</span><span class="o">.</span><span class="kt">IdentifiedValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">RowContent</span><span class="p">)</span> 
+    <span class="k">where</span> 
+        <span class="kt">Content</span> <span class="o">==</span> <span class="kt">ForEach</span><span class="o">&lt;</span><span class="kt">Data</span><span class="p">,</span> <span class="kt">Button</span><span class="o">&lt;</span><span class="kt">HStack</span><span class="o">&lt;</span><span class="kt">RowContent</span><span class="o">&gt;&gt;&gt;</span><span class="p">,</span> 
+        <span class="kt">Data</span> <span class="p">:</span> <span class="kt">RandomAccessCollection</span><span class="p">,</span> 
+        <span class="kt">RowContent</span> <span class="p">:</span> <span class="kt">View</span><span class="p">,</span> 
+        <span class="kt">Data</span><span class="o">.</span><span class="kt">Element</span> <span class="p">:</span> <span class="kt">Identifiable</span>
+        
+    <span class="c1">//...</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>这个初始化方法的约束比较多，我们一行行来看：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">Content == ForEach&lt;Data, Button&lt;HStack&lt;RowContent&gt;&gt;&gt;</code> 因为这个函数签名中并没有出现 <code class="highlighter-rouge">Content</code>，<code class="highlighter-rouge">Content</code> 仅只 <code class="highlighter-rouge">List&lt;Selection, Content&gt;</code> 的类型声明中有定义，所以在这与其说是一个约束，不如说是一个用来反向确定 <code class="highlighter-rouge">List</code> 实际类型的描述。现在让我们先将注意力放在更重要的地方，稍后会再多讲一些这个。</li>
+  <li><code class="highlighter-rouge">Data : RandomAccessCollection</code> 这基本上等同于要求第一个输入参数是 <code class="highlighter-rouge">Array</code>。</li>
+  <li><code class="highlighter-rouge">RowContent : View</code> 对于构建每一行的 <code class="highlighter-rouge">rowContent</code> 来说，需要返回是 <code class="highlighter-rouge">View</code> 是很正常的事情。注意 <code class="highlighter-rouge">rowContent</code> 其实也是被 <code class="highlighter-rouge">@ViewBuilder</code> 标记的，因此你也可以把 <code class="highlighter-rouge">LandmarkRow</code> 的内容展开写进去。不过一般我们会更希望尽可能拆小 UI 部件，而不是把东西堆在一起。</li>
+  <li><code class="highlighter-rouge">Data.Element : Identifiable</code> 要求 <code class="highlighter-rouge">Data.Element</code> (也就是数组元素的类型) 上存在一个可以辨别出某个实例的<a href="https://developer.apple.com/documentation/swiftui/identifiable/3285392-id">满足 <code class="highlighter-rouge">Hashable</code> 的 id</a>。这个要求将在数据变更时快速定位到变化的数据所对应的 cell，并进行 UI 刷新。</li>
+</ul>
+
+<p>关于 <code class="highlighter-rouge">List</code> 以及其他一些常见的基础 <code class="highlighter-rouge">View</code>，有一个比较有趣的事实。在下面的代码中，我们期望 <code class="highlighter-rouge">List</code> 的初始化方法生成的是某个类型的 <code class="highlighter-rouge">View</code>：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">var</span> <span class="nv">body</span><span class="p">:</span> <span class="kd">some</span> <span class="kt">View</span> <span class="p">{</span>
+    <span class="kt">List</span> <span class="p">{</span>
+        <span class="c1">//...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>但是你看遍 <a href="https://developer.apple.com/documentation/swiftui/list">List 的文档</a>，甚至是 Cmd + Click 到 SwiftUI 的 interface 中查找 <code class="highlighter-rouge">View</code> 相关的内容，都找不到 <code class="highlighter-rouge">List : View</code> 之类的声明。</p>
+
+<p>难道是因为 SwiftUI 做了什么手脚，让本来没有满足 <code class="highlighter-rouge">View</code> 的类型都可以“充当”一个 <code class="highlighter-rouge">View</code> 吗？当然不是这样…如果你在运行时暂定 app 并用 lldb 打印一下 <code class="highlighter-rouge">List</code> 的类型信息，可以看到下面的下面的信息：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(lldb) type lookup List
+...
+struct List&lt;Selection, Content&gt; : SwiftUI._UnaryView where ...
+</code></pre></div></div>
+
+<p>进一步，<code class="highlighter-rouge">_UnaryView</code> 的声明是：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="nv">_UnaryView</span> <span class="p">:</span> <span class="kt">View</span> <span class="k">where</span> <span class="k">Self</span><span class="o">.</span><span class="kt">Body</span> <span class="p">:</span> <span class="n">_UnaryView</span> <span class="p">{</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>SwiftUI 内部的一元视图 <code class="highlighter-rouge">_UnaryView</code> 协议虽然是满足 <code class="highlighter-rouge">View</code> 的，但它被隐藏起来了，而满足它的 <code class="highlighter-rouge">List</code> 虽然是 public 的，但是却可以把这个协议链的信息也作为内部信息隐藏起来。这是 Swift 内部框架的特权，第三方的开发者无法这样在在两个 public 的声明之间插入一个私有声明。</p>
+
+<p>最后，SwiftUI 中当前 (Xcode 11 beta 1) 只有对应 <code class="highlighter-rouge">UITableView</code> 的 <code class="highlighter-rouge">List</code>，而没有 <code class="highlighter-rouge">UICollectionView</code> 对应的像是 <code class="highlighter-rouge">Grid</code> 这样的类型。现在想要实现类似效果的话，只能嵌套使用 <code class="highlighter-rouge">VStack</code> 和 <code class="highlighter-rouge">HStack</code>。这是比较奇怪的，因为技术层面上应该和 table view 没有太多区别，大概是因为工期不太够？相信今后应该会补充上 <code class="highlighter-rouge">Grid</code>。</p>
+
+<h3 id="教程-3---handling-user-input"><a href="https://developer.apple.com/tutorials/swiftui/handling-user-input">教程 3 - Handling User Input</a></h3>
+
+<h4 id="section-3---step-2-state-和-binding"><a href="https://developer.apple.com/tutorials/swiftui/handling-user-input#add-a-control-to-toggle-the-state">Section 3 - Step 2: <code class="highlighter-rouge">@State</code> 和 <code class="highlighter-rouge">Binding</code></a></h4>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">@State</span> <span class="k">var</span> <span class="nv">showFavoritesOnly</span> <span class="o">=</span> <span class="kc">true</span>
+
+<span class="k">var</span> <span class="nv">body</span><span class="p">:</span> <span class="kd">some</span> <span class="kt">View</span> <span class="p">{</span>
+    <span class="kt">NavigationView</span> <span class="p">{</span>
+        <span class="kt">List</span> <span class="p">{</span>
+            <span class="kt">Toggle</span><span class="p">(</span><span class="nv">isOn</span><span class="p">:</span> <span class="err">$</span><span class="n">showFavoritesOnly</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kt">Text</span><span class="p">(</span><span class="s">"Favorites only"</span><span class="p">)</span>
+            <span class="p">}</span>
+    <span class="c1">//...</span>
+            <span class="k">if</span> <span class="o">!</span><span class="k">self</span><span class="o">.</span><span class="n">showFavoritesOnly</span> <span class="o">||</span> <span class="n">landmark</span><span class="o">.</span><span class="n">isFavorite</span> <span class="p">{</span>
+</code></pre></div></div>
+
+<p>这里出现了两个以前在 Swift 里没有的特性：<code class="highlighter-rouge">@State</code> 和 <code class="highlighter-rouge">$showFavoritesOnly</code>。</p>
+
+<p>如果你 Cmd + Click 点到 <code class="highlighter-rouge">State</code> 的定义里面，可以看到它其实是一个特殊的 <code class="highlighter-rouge">struct</code>：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">@propertyWrapper</span> <span class="kd">public</span> <span class="kd">struct</span> <span class="kt">State</span><span class="o">&lt;</span><span class="kt">Value</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt">DynamicViewProperty</span><span class="p">,</span> <span class="kt">BindingConvertible</span> <span class="p">{</span>
+
+    <span class="c1">/// Initialize with the provided initial value.</span>
+    <span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="n">initialValue</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Value</span><span class="p">)</span>
+
+    <span class="c1">/// The current state value.</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Value</span> <span class="p">{</span> <span class="k">get</span> <span class="k">nonmutating</span> <span class="k">set</span> <span class="p">}</span>
+
+    <span class="c1">/// Returns a binding referencing the state value.</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nv">binding</span><span class="p">:</span> <span class="kt">Binding</span><span class="o">&lt;</span><span class="kt">Value</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+
+    <span class="c1">/// Produces the binding referencing this state value</span>
+    <span class="kd">public</span> <span class="k">var</span> <span class="nv">delegateValue</span><span class="p">:</span> <span class="kt">Binding</span><span class="o">&lt;</span><span class="kt">Value</span><span class="o">&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">@propertyWrapper</code> 标注和<a href="https://xiaozhuanlan.com/topic/7652341890#sectionsection3step5viewbuilderhttpsdeveloperapplecomtutorialsswiftuicreatingandcombiningviewscombineviewsusingstacks">上一篇中提到</a>的 <code class="highlighter-rouge">@_functionBuilder</code> 类似，它修饰的 <code class="highlighter-rouge">struct</code> 可以变成一个新的修饰符并作用在其他代码上，来改变这些代码默认的行为。这里 <code class="highlighter-rouge">@propertyWrapper</code> 修饰的 <code class="highlighter-rouge">State</code> 被用做了 <code class="highlighter-rouge">@State</code> 修饰符，并用来修饰 <code class="highlighter-rouge">View</code> 中的 <code class="highlighter-rouge">showFavoritesOnly</code> 变量。</p>
+
+<p>和 <code class="highlighter-rouge">@_functionBuilder</code> 负责按照规矩“重新构造”函数的作用不同，<code class="highlighter-rouge">@propertyWrapper</code> 的修饰符最终会作用在属性上，将属性“包裹”起来，以达到控制某个属性的读写行为的目的。如果将这部分代码“展开”，它实际上是这个样子的：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// @State var showFavoritesOnly = true</span>
+   <span class="k">var</span> <span class="nv">showFavoritesOnly</span> <span class="o">=</span> <span class="kt">State</span><span class="p">(</span><span class="nv">initialValue</span><span class="p">:</span> <span class="kc">true</span><span class="p">)</span>
+    
+<span class="k">var</span> <span class="nv">body</span><span class="p">:</span> <span class="kd">some</span> <span class="kt">View</span> <span class="p">{</span>
+    <span class="kt">NavigationView</span> <span class="p">{</span>
+        <span class="kt">List</span> <span class="p">{</span>
+<span class="c1">//          Toggle(isOn: $showFavoritesOnly) {</span>
+            <span class="kt">Toggle</span><span class="p">(</span><span class="nv">isOn</span><span class="p">:</span> <span class="n">showFavoritesOnly</span><span class="o">.</span><span class="n">binding</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kt">Text</span><span class="p">(</span><span class="s">"Favorites only"</span><span class="p">)</span>
+            <span class="p">}</span>
+    <span class="c1">//...</span>
+<span class="c1">//          if !self.showFavoritesOnly || landmark.isFavorite {</span>
+            <span class="k">if</span> <span class="o">!</span><span class="k">self</span><span class="o">.</span><span class="n">showFavoritesOnly</span><span class="o">.</span><span class="n">value</span> <span class="o">||</span> <span class="n">landmark</span><span class="o">.</span><span class="n">isFavorite</span> <span class="p">{</span>
+</code></pre></div></div>
+
+<p>我把变化之前的部分注释了一下，并且在后面一行写上了展开后的结果。可以看到 <code class="highlighter-rouge">@State</code> 只是声明 <code class="highlighter-rouge">State</code> struct 的一种简写方式而已。<code class="highlighter-rouge">State</code> 里对具体要如何读写属性的规则进行了定义。对于读取，非常简单，使用 <code class="highlighter-rouge">showFavoritesOnly.value</code> 就能拿到 <code class="highlighter-rouge">State</code> 中存储的实际值。而原代码中 <code class="highlighter-rouge">$showFavoritesOnly</code> 的写法也只不过是 <code class="highlighter-rouge">showFavoritesOnly.binding</code> 的简化。<code class="highlighter-rouge">binding</code> 将创建一个 <code class="highlighter-rouge">showFavoritesOnly</code> 的引用，并将它传递给 <code class="highlighter-rouge">Toggle</code>。再次强调，这个 <code class="highlighter-rouge">binding</code> 是一个<strong>引用</strong>类型，所以 <code class="highlighter-rouge">Toggle</code> 中对它的修改，会直接反应到当前 View 的 <code class="highlighter-rouge">showFavoritesOnly</code> 去设置它的 <code class="highlighter-rouge">value</code>。而 <code class="highlighter-rouge">State</code> 的 value didSet 将触发 <code class="highlighter-rouge">body</code> 的刷新，从而完成 State -&gt; View 的绑定。</p>
+
+<blockquote>
+  <p>在 Xcode 11 beta 1 中，Swift 中使用的修饰符名字是 <code class="highlighter-rouge">@propertyDelegate</code>，不过在 WWDC 上 Apple 提到这个特性时把它叫做了 <code class="highlighter-rouge">@propertyWrapper</code>。根据<a href="https://twitter.com/josefdolezal/status/1137619597002248192?s=21">可靠消息</a>，在未来正式版中应该也会叫做 <code class="highlighter-rouge">@propertyWrapper</code>，所以大家在看各种资料的时候最好也建议一个简单的映射关系。</p>
+
+  <p>如果你想要了解更多关于 <code class="highlighter-rouge">@propertyWrapper</code> 的细节，可以看看<a href="https://github.com/apple/swift-evolution/blob/master/proposals/0258-property-delegates.md">相关的提案</a>和<a href="https://forums.swift.org/t/se-0258-property-delegates/23139">论坛讨论</a>。比较有意思的细节是 Apple 在将相应的 PR merge 进了 master 以后又把这个提案的打回了“修改”的状态，而非直接接受。除了 <code class="highlighter-rouge">@propertyWrapper</code> 的名称修正以外，应该还会有一些其他的细节修改，但是已经公开的行为模式上应该不会太大变化了。</p>
+</blockquote>
+
+<p>SwiftUI 中还有几个常见的 <code class="highlighter-rouge">@</code> 开头的修饰，比如 <code class="highlighter-rouge">@Binding</code>，<code class="highlighter-rouge">@Environment</code>，<code class="highlighter-rouge">@EnvironmentObject</code> 等，原理上和 <code class="highlighter-rouge">@State</code> 都一样，只不过它们所对应的 struct 中定义读写方式有区别。它们共同构成了 SwiftUI 数据流的最基本的单元。对于 SwiftUI 的数据流，如果展开的话足够一整篇文章了。在这里还是十分建议看一看 <a href="https://developer.apple.com/videos/play/wwdc2019/226/">Session 226 - Data Flow Through SwiftUI</a> 的相关内容。</p>
+
+<h3 id="教程-5---animating-views-and-transitions"><a href="https://developer.apple.com/tutorials/swiftui/animating-views-and-transitions">教程 5 - Animating Views and Transitions</a></h3>
+
+<h4 id="section-2---step-4-两种动画的方式"><a href="https://developer.apple.com/tutorials/swiftui/animating-views-and-transitions#customize-view-transitions">Section 2 - Step 4: 两种动画的方式</a></h4>
+
+<p>在 SwiftUI 中，做动画变的十分简单。Apple 的教程里提供了两种动画的方式：</p>
+
+<ol>
+  <li>直接在 <code class="highlighter-rouge">View</code> 上使用 <code class="highlighter-rouge">.animation</code> modifier</li>
+  <li>使用 <code class="highlighter-rouge">withAnimation {  }</code> 来控制某个 <code class="highlighter-rouge">State</code>，进而触发动画。</li>
+</ol>
+
+<p>对于只需要对单个 <code class="highlighter-rouge">View</code> 做动画的时候，<code class="highlighter-rouge">animation(_:)</code> 要更方便一些，它和其他各类 modifier 并没有太大不同，返回的是一个包装了对象 <code class="highlighter-rouge">View</code> 和对应的动画类型的新的 <code class="highlighter-rouge">View</code>。<code class="highlighter-rouge">animation(_:)</code> 接受的参数 <code class="highlighter-rouge">Animation</code> 并不是直接定义 <code class="highlighter-rouge">View</code> 上的动画的数值内容的，它是描述的是动画所使用的时间曲线，动画的延迟等这些和 <code class="highlighter-rouge">View</code> 无关的东西。具体和 <code class="highlighter-rouge">View</code> 有关的，想要进行动画的数值方面的变更，由其他的诸如 <code class="highlighter-rouge">rotationEffect</code> 和 <code class="highlighter-rouge">scaleEffect</code> 这样的 modifier 来描述。</p>
+
+<p>在上面的 <a href="https://developer.apple.com/tutorials/swiftui/animating-views-and-transitions#add-animations-to-individual-views">教程 5 - Section 1 - Step 5</a> 里有这样一段代码：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">Button</span><span class="p">(</span><span class="nv">action</span><span class="p">:</span> <span class="p">{</span>
+    <span class="k">self</span><span class="o">.</span><span class="n">showDetail</span><span class="o">.</span><span class="nf">toggle</span><span class="p">()</span>
+<span class="p">})</span> <span class="p">{</span>
+    <span class="kt">Image</span><span class="p">(</span><span class="nv">systemName</span><span class="p">:</span> <span class="s">"chevron.right.circle"</span><span class="p">)</span>
+        <span class="o">.</span><span class="nf">imageScale</span><span class="p">(</span><span class="o">.</span><span class="n">large</span><span class="p">)</span>
+        <span class="o">.</span><span class="nf">rotationEffect</span><span class="p">(</span><span class="o">.</span><span class="nf">degrees</span><span class="p">(</span><span class="n">showDetail</span> <span class="p">?</span> <span class="mi">90</span> <span class="p">:</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="o">.</span><span class="nf">animation</span><span class="p">(</span><span class="kc">nil</span><span class="p">)</span>
+        <span class="o">.</span><span class="nf">scaleEffect</span><span class="p">(</span><span class="n">showDetail</span> <span class="p">?</span> <span class="mf">1.5</span> <span class="p">:</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="o">.</span><span class="nf">padding</span><span class="p">()</span>
+        <span class="o">.</span><span class="nf">animation</span><span class="p">(</span><span class="o">.</span><span class="nf">spring</span><span class="p">())</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>要注意，SwiftUI 的 modifier 是有顺序的。在我们调用 <code class="highlighter-rouge">animation(_:)</code> 时，SwiftUI 做的事情等效于是把之前的所有 modifier 检查一遍，然后找出所有满足 <a href="https://developer.apple.com/documentation/swiftui/animatable"><code class="highlighter-rouge">Animatable</code></a> 协议的 view 上的数值变化，比如角度、位置、尺寸等，然后将这些变化打个包，创建一个事物 (<code class="highlighter-rouge">Transaction</code>) 并提交给底层渲染去做动画。在上面的代码中，<code class="highlighter-rouge">.rotationEffect</code> 后的 <code class="highlighter-rouge">.animation(nil)</code> 将 rotation 的动画提交，因为指定了 <code class="highlighter-rouge">nil</code> 所以这里没有实际的动画。在最后，<code class="highlighter-rouge">.rotationEffect</code> 已经被处理了，所以末行的 <code class="highlighter-rouge">.animation(.spring())</code> 提交的只有 <code class="highlighter-rouge">.scaleEffect</code>。</p>
+
+<p><code class="highlighter-rouge">withAnimation {  }</code> 是一个顶层函数，在闭包内部，我们一般会触发某个 State 的变化，并让 <code class="highlighter-rouge">View.body</code> 进行重新计算：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">Button</span><span class="p">(</span><span class="nv">action</span><span class="p">:</span> <span class="p">{</span>
+    <span class="n">withAnimation</span> <span class="p">{</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">showDetail</span><span class="o">.</span><span class="nf">toggle</span><span class="p">()</span>
+    <span class="p">}</span>
+<span class="p">})</span> <span class="p">{</span> 
+  <span class="c1">//...</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>如果需要，你也可以为它指定一个具体的 <code class="highlighter-rouge">Animation</code>：</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">withAnimation</span><span class="p">(</span><span class="o">.</span><span class="nf">basic</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">self</span><span class="o">.</span><span class="n">showDetail</span><span class="o">.</span><span class="nf">toggle</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>这个方法相当于把一个 <code class="highlighter-rouge">animation</code> 设置到 <code class="highlighter-rouge">View</code> 数值变化的 <code class="highlighter-rouge">Transaction</code> 上，并提交给底层渲染去做动画。从原理上来说，<code class="highlighter-rouge">withAnimation</code> 是统一控制单个的 <code class="highlighter-rouge">Transaction</code>，而针对不同 <code class="highlighter-rouge">View</code> 的  <code class="highlighter-rouge">animation(_:)</code> 调用则可能对应多个不同的 <code class="highlighter-rouge">Transaction</code>。</p>
+
+<h3 id="教程-7---working-with-ui-controls"><a href="https://developer.apple.com/tutorials/swiftui/working-with-ui-controls">教程 7 - Working with UI Controls</a></h3>
+
+<h4 id="section-4---step-2-关于-view-的生命周期"><a href="https://developer.apple.com/tutorials/swiftui/working-with-ui-controls#delay-edit-propagation">Section 4 - Step 2: 关于 <code class="highlighter-rouge">View</code> 的生命周期</a></h4>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">ProfileEditor</span><span class="p">(</span><span class="nv">profile</span><span class="p">:</span> <span class="err">$</span><span class="n">draftProfile</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">onDisappear</span> <span class="p">{</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">draftProfile</span> <span class="o">=</span> <span class="k">self</span><span class="o">.</span><span class="n">profile</span>
+    <span class="p">}</span>
+</code></pre></div></div>
+
+<p>在 UIKit 开发时，我们经常会接触一些像是 <code class="highlighter-rouge">viewDidLoad</code>，<code class="highlighter-rouge">viewWillAppear</code> 这样的生命周期的方法，并在里面进行一些配置。SwiftUI 里也有一部分这类生命周期的方法，比如 <code class="highlighter-rouge">.onAppear</code> 和 <code class="highlighter-rouge">.onDisappear</code>，它们也被“统一”在了 modifier 这面大旗下。</p>
+
+<p>但是相对于 UIKit 来说，SwiftUI 中能 hook 的生命周期方法比较少，而且相对要通用一些。本身在生命周期中做操作这种方式就和声明式的编程理念有些相悖，看上去就像是加上了一些命令式的 hack。我个人比较期待 <code class="highlighter-rouge">View</code> 和 <code class="highlighter-rouge">Combine</code> 能再深度结合一些，把像是 <code class="highlighter-rouge">self.draftProfile = self.profile</code> 这类依赖生命周期的操作也用绑定的方式搞定。</p>
+
+<p>相比于 <code class="highlighter-rouge">.onAppear</code> 和 <code class="highlighter-rouge">.onDisappear</code>，更通用的事件响应 hook 是 <code class="highlighter-rouge">.onReceive(_:perform:)</code>，它定义了一个可以响应目标 <code class="highlighter-rouge">Publisher</code> 的任意的 <code class="highlighter-rouge">View</code>，一旦订阅的 <code class="highlighter-rouge">Publisher</code> 发出新的事件时，<code class="highlighter-rouge">onReceive</code> 就将被调用。因为我们可以自行定义这些 publisher，所以它是完备的，这在把现有的 UIKit View 转换到 SwiftUI View 时会十分有用。</p>
+
+:ET

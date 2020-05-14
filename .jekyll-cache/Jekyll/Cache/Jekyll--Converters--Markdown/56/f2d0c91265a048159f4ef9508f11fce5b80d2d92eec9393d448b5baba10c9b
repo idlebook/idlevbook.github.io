@@ -1,0 +1,3 @@
+I"<p>本文是笔者在 MDCC 16 (移动开发者大会) 上 iOS 专场中的主题演讲的文字整理。您可以在<a href="https://speakerdeck.com/onevcat/mian-xiang-xie-yi-bian-cheng-yu-cocoa-de-xie-hou">这里</a>找到演讲使用的 Keynote，部分示例代码可以在 MDCC 2016 的<a href="https://github.com/MDCC2016/ProtocolNetwork">官方 repo</a> 中找到。因为全部内容比较长，所以分成了上下两个部分，本文 (上) 主要介绍了一些理论方面的内容，包括面向对象编程存在的问题，面向协议的基本概念和决策模型等，<a href="/2016/12/pop-cocoa-2/">下半部分</a>主要展示了一些笔者日常使用面向协议思想和 Cocoa 开发结合的示例代码，并对其进行了一些解说。</p>
+
+:ET
