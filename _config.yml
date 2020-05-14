@@ -43,3 +43,5 @@ social:
 ga:
     id: UA-25719337-1
     host: onevcat.com
+
+theme: jekyll-theme-slate
