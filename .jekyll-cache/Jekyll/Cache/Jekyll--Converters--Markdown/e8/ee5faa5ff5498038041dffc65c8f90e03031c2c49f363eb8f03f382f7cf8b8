@@ -1,7 +1,0 @@
-I"�<p>向Google Map查询给定经纬度的位置信息，返回为JSON</p>
-
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+ (NSString *)googleReverseStringWithCoordinate:(CLLocationCoordinate2D)coordinate {
-    return [NSString stringWithFormat:@"http://maps.google.com/maps/geo?q=%lf,%lf&amp;output=json&amp;sensor=false&amp;accuracy=4", coordinate.latitude,coordinate.longitude];
-}
-</code></pre></div></div>
-:ET

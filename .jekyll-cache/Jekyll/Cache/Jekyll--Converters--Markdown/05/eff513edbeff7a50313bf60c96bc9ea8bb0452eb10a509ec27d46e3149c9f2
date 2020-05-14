@@ -1,2 +1,0 @@
-I"�<p>在iOS5中使用Twitter framework或者在iOS6中使用Social framework来完成Twitter的集成是非常简单和轻松的，但是如果应用要针对iOS5之前的系统版本，那么就不能使用iOS提供的框架了。一个比较常见也是使用最广泛的选择是<a href="https://github.com/mattgemmell/MGTwitterEngine">MGTwitterEngine</a>，比如<a href="http://www.onevcat.com/showcase/pomodoro_do/">PomodoroDo</a>选择使用的就是该框架。</p>
-:ET
