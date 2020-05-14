@@ -25,7 +25,7 @@ nav:
 
 # Pagination
 plugins: [jekyll-paginate]
-paginate: 10
+paginate: 20
 paginate_path: "page/:num/"
 
 # Comment
@@ -43,5 +43,3 @@ social:
 ga:
     id: UA-25719337-1
     host: onevcat.com
-
-theme: jekyll-theme-slate

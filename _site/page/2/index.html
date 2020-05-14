@@ -147,72 +147,142 @@
   <ol class="post-list">
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2018/11/defer/" title="访问 关于 Swift defer 的正确使用">关于 Swift defer 的正确使用</a></h2>
-      <p class="excerpt">其实这篇文章的缘起是由于在对 Kingfisher 做重构的时候，因为自己对 defer 的理解不够准确，导致了一个 bug。所以想藉由这篇文章探索一下 defer 这个关键字的一些 edge case。典型用法Swift 里的 defer 大家应该都很熟悉了，defer 所声明的 block 会在当前代码执行退出后被调用。正因为它提供了一种延时调用的方式，所以一般会被用来做资源释放或者销毁，这在某个函数有多个返回出口的时候特别有用。比如下面的通过 FileHandle 打开文件进行操作的...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2018-11-16 09:38:00 +0800" class="post-list__meta--date date">2018-11-16</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2018/11/defer/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2017/02/ownership/" title="访问 所有权宣言 - Swift 官方文章 Ownership Manifesto 译文评注版">所有权宣言 - Swift 官方文章 Ownership Manifesto 译文评注版</a></h2>
+      <p class="excerpt">Swift 团队最近在邮件列表里向社区发了一封邮件，讲述了关于内存所有权方面的一些未来的改变方向。作为上层 API 的使用者来说，我们可能并不需要了解背后所有的事实，但是 Apple 的这封邮件中对 Swift 的值和对象的内存管理进行了很全面的表述，一步步说明了前因后果。如果你想深入学习和了解 Swift 的话，这篇文章是非常棒的参考资料。我尝试翻译了一下全文，并且加上了一些自己的注解。虽然这篇文章比较长，但是如果你想要进阶 Swift 的话，不妨花时间通读全文 (甚至通读全文若干遍)。...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2017-02-27 14:40:00 +0800" class="post-list__meta--date date">2017-02-27</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2017/02/ownership/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2018/10/swift-result-error/" title="访问 Result&lt;T&gt; 还是 Result&lt;T, E: Error&gt;">Result&lt;T&gt; 还是 Result&lt;T, E: Error&gt;</a></h2>
-      <p class="excerpt">  我之前在专栏文章里曾经发布这篇文章，由于这个话题其实还是挺重要的，可以说代表了 Swift 今后发展的方向流派，所以即使和专栏文章内容有些重复，我还是想把它再贴到博客来。经过半年以后，自己对于这个问题也有了更多的实践和想法，所以同时也更新了一下。我没有直接改动原文，而是把新的想法和需要补充的说明，用类似这段话的引用的方式写在合适的上下文里。开始先打个广告我个人经常会在数码荔枝用优惠价格购买面向中国用户的一些软件，相比于花美金直接购买，价格非常实惠。近年来国内的正版风气和对知识知识产权的...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2018-10-31 10:38:00 +0800" class="post-list__meta--date date">2018-10-31</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2018/10/swift-result-error/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2017/02/mailme-app/" title="访问 使用邮件来进行信息管理，顺便介绍最近写的一个小 app - Mail Me">使用邮件来进行信息管理，顺便介绍最近写的一个小 app - Mail Me</a></h2>
+      <p class="excerpt">距离上一次自己在 App Store 发布个人 app 已经过去了两年多了。这段时间里把精力主要都放在了公司项目和继续进一步的学习中，倒也在日常工作和出书等方面取得了一些进展。个人 app 这块近两年虽然有写一些便捷的效率类应用，但是几次审核都被 Apple 无情拒掉以后，也就安心弄成自用的小工具了。看着自己逐渐发霉的开发者证书，果然觉得还是找时间倒腾点什么比较好。于是就有了现在想要介绍给大家的这个工具，Mail Me - 一个可以帮助你快速给自己发送邮件的小 app。基于邮件的信息管理方...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2017-02-22 09:05:00 +0800" class="post-list__meta--date date">2017-02-22</time> &#8226; <span class="post-list__meta--tags tags">胡言乱语集</span><a class="btn-border-small" href=/2017/02/mailme-app/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2018/10/diary/" title="访问 十年前的日记们">十年前的日记们</a></h2>
-      <p class="excerpt">假如我有时光机最近把工作上的事情忙完了，也把主机从美国换到了日本的机房，解决了国内的访问问题，所以准备开始好好重新拾掇一下，恢复定期更新 blog。其实我从大学时就有开始写 blog 的习惯了。不过不像最近的独立博客，那时候更多地是用新浪或者搜狐这样的平台，所以也就在那些地方也留下了不少“足迹”。既然是自己“存在过的证明”，我想可能还是把它们汇总一下，留个存档为好。于是就有了这篇和“技术”没什么关系的文章。这里面是我从 2006 年底到 2010 年三月期间的一些碎碎念，时间跨越从大二上半...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2018-10-23 09:11:26 +0800" class="post-list__meta--date date">2018-10-23</time> &#8226; <span class="post-list__meta--tags tags">胡言乱语集</span><a class="btn-border-small" href=/2018/10/diary/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2016/12/concurrency/" title="访问 Swift 并行编程现状和展望 - async/await 和参与者模式">Swift 并行编程现状和展望 - async/await 和参与者模式</a></h2>
+      <p class="excerpt">  这篇文章不是针对当前版本 Swift 3 的，而是对预计于 2018 年发布的 Swift 5 的一些特性的猜想。如果两年后我还记得这篇文章，可能会回来更新一波。在此之前，请当作一篇对现代语言并行编程特性的不太严谨科普文来看待。CPU 速度已经很多年没有大的突破了，硬件行业更多地将重点放在多核心技术上，而与之对应，软件中并行编程的概念也越来越重要。如何利用多核心 CPU，以及拥有密集计算单元的 GPU，来进行快速的处理和计算，是很多开发者十分感兴趣的事情。在今年年初 Swift 4 的...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-12-20 11:53:11 +0800" class="post-list__meta--date date">2016-12-20</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/12/concurrency/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2018/06/wwdc-2018/" title="访问 开发者所需要知道的 WWDC 2018 新特性">开发者所需要知道的 WWDC 2018 新特性</a></h2>
-      <p class="excerpt">一直阅读我的博客的朋友可能知道，我在每年 WWDC 之后都会写 (水) 一篇关于新 SDK 和开发工具的文章。之前这个系列叫做《开发者所需要知道的 iOS SDK 新特性》，但是最近虽然 Craig 嘴上说着不要，身体却很诚实地将 iOS 和 macOS 带到一起，所以今年我觉得可以改一改题目，就总览一下作为 Apple 生态圈的开发者，在今年 WWDC 上我个人的一些观察，以及可能应该注意的有趣的地方。在会前，Apple 就已经放出消息要放慢增加新功能的脚步，转而提升软件稳定性和可靠性。...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2018-06-05 11:15:00 +0800" class="post-list__meta--date date">2018-06-05</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2018/06/wwdc-2018/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2016/12/pop-cocoa-2/" title="访问 面向协议编程与 Cocoa 的邂逅 (下)">面向协议编程与 Cocoa 的邂逅 (下)</a></h2>
+      <p class="excerpt">本文是笔者在 MDCC 16 (移动开发者大会) 上 iOS 专场中的主题演讲的文字整理。您可以在这里找到演讲使用的 Keynote，部分示例代码可以在 MDCC 2016 的官方 repo 中找到。在上半部分主要介绍了一些理论方面的内容，包括面向对象编程存在的问题，面向协议的基本概念和决策模型等。本文 (下) 主要展示了一些笔者日常使用面向协议思想和 Cocoa 开发结合的示例代码，并对其进行了一些解说。转・热恋 - 在日常开发中使用协议WWDC 2015 在 POP 方面有一个非常优秀...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-12-01 10:22:11 +0800" class="post-list__meta--date date">2016-12-01</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/12/pop-cocoa-2/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2018/05/mvc-wrong-use/" title="访问 关于 MVC 的一个常见的误用">关于 MVC 的一个常见的误用</a></h2>
-      <p class="excerpt">  写在前面：ObjC 中国 (或者说我个人) 现在正和 objc.io 合作打造一本关于 app 架构的书籍。英文版本已经提前预售，书本身也进入了最后的 review 阶段。我们也将在第一时间进行本书中文版的工作，还请大家关注。  本文的内容也是有关 app 架构的一些思考，如果你对架构方面的话题有兴趣的话，我之前还写过一篇利用 reducer 的单向数据流动的函数式 View Controller 的文章可供参考。如何避免把 Model View Controller 写成 Massi...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2018-05-11 08:15:00 +0800" class="post-list__meta--date date">2018-05-11</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2018/05/mvc-wrong-use/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2016/11/pop-cocoa-1/" title="访问 面向协议编程与 Cocoa 的邂逅 (上)">面向协议编程与 Cocoa 的邂逅 (上)</a></h2>
+      <p class="excerpt">本文是笔者在 MDCC 16 (移动开发者大会) 上 iOS 专场中的主题演讲的文字整理。您可以在这里找到演讲使用的 Keynote，部分示例代码可以在 MDCC 2016 的官方 repo 中找到。因为全部内容比较长，所以分成了上下两个部分，本文 (上) 主要介绍了一些理论方面的内容，包括面向对象编程存在的问题，面向协议的基本概念和决策模型等，下半部分主要展示了一些笔者日常使用面向协议思想和 Cocoa 开发结合的示例代码，并对其进行了一些解说。引子面向协议编程 (Protocol Or...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-11-29 09:22:11 +0800" class="post-list__meta--date date">2016-11-29</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/11/pop-cocoa-1/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2018/03/swift-meta/" title="访问 不同角度看问题 - 从 Codable 到 Swift 元编程">不同角度看问题 - 从 Codable 到 Swift 元编程</a></h2>
-      <p class="excerpt">  最近开设了一个小专栏，用来记录日常开发时遇到的问题和解决方案，同时也会收藏一些学习时记录的笔记，随想等。其中一些长文 (包括本文) 会首发于专栏，之后再同步到博客这边。虽然现在的文章还不多，但是因为计划更新比较勤快，所以适当进行收费，也算是对自己写作的一种鼓励和鞭笞。欢迎感兴趣的同学进行订阅，谢谢~起源前几天看到同事的一个 P-R，里面有将一个类型转换为字典的方法。在我们所使用的 API 中，某些方法需要接受 JSON 兼容的字典 (也就是说，字典中键值对的 value 只能是数字，字...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2018-03-12 08:15:00 +0800" class="post-list__meta--date date">2018-03-12</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2018/03/swift-meta/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2016/08/notification/" title="访问 活久见的重构 - iOS 10 UserNotifications 框架解析">活久见的重构 - iOS 10 UserNotifications 框架解析</a></h2>
+      <p class="excerpt">TL;DRiOS 10 中以前杂乱的和通知相关的 API 都被统一了，现在开发者可以使用独立的 UserNotifications.framework 来集中管理和使用 iOS 系统中通知的功能。在此基础上，Apple 还增加了撤回单条通知，更新已展示通知，中途修改通知内容，在通知中展示图片视频，自定义通知 UI 等一系列新功能，非常强大。对于开发者来说，相较于之前版本，iOS 10 提供了一套非常易用的通知处理接口，是 SDK 的一次重大重构。而之前的绝大部分通知相关 API 都已经被标...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-08-08 09:22:11 +0800" class="post-list__meta--date date">2016-08-08</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/08/notification/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2017/10/swift-error-category/" title="访问 关于 Swift Error 的分类">关于 Swift Error 的分类</a></h2>
-      <p class="excerpt">在去年我应 IBM 编辑的邀请写过一篇关于 Swift 2 中 throws 的文章。现在回头看，Swift 2 其实是 Swift 语言发展的一个挺重要的节点：如果说 Swift 1 是一个更偏向于验证阶段的产品的话，Swift 2 中加入的特性为这门语言的基石进行了补足。在那篇文章里我们主要深入探索了新的 throw 关键字背后的事情，而同一时期其实 Swift 官方有过一次关于错误处理的讨论。随着 Swift 3 的开源，这些原始文档也被一同公开，展示了 Swift 设计的过程和轨迹...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2017-10-17 11:15:00 +0800" class="post-list__meta--date date">2017-10-17</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2017/10/swift-error-category/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2016/06/ios-10-ats/" title="访问 关于 iOS 10 中 ATS 的问题">关于 iOS 10 中 ATS 的问题</a></h2>
+      <p class="excerpt">  本文于 2016 年 11 月 28 日按照 Apple 最新的文档和 Xcode 8 中的表现进行了部分更新。WWDC 15 提出的 ATS (App Transport Security) 是 Apple 在推进网络通讯安全的一个重要方式。在 iOS 9 和 OS X 10.11 中，默认情况下非 HTTPS 的网络访问是被禁止的。当然，因为这样的推进影响面非常广，作为缓冲，我们可以在 Info.plist 中添加 NSAppTransportSecurity 字典并且将 NSAl...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-06-17 12:34:11 +0800" class="post-list__meta--date date">2016-06-17</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/06/ios-10-ats/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2017/07/state-based-viewcontroller/" title="访问 单向数据流动的函数式 View Controller">单向数据流动的函数式 View Controller</a></h2>
-      <p class="excerpt">View Controller 向来是 MVC (Model-View-View Controller) 中最让人头疼的一环，MVC 架构本身并不复杂，但开发者很容易将大量代码扔到用于协调 View 和 Model 的 Controller 中。你不能说这是一种错误，因为 View Controller 所承担的本来就是胶水代码和业务逻辑的部分。但是，持续这样做必定将导致 Model View Controller 变成 Massive View Controller，代码也就一天天烂下去...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2017-07-13 09:05:00 +0800" class="post-list__meta--date date">2017-07-13</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2017/07/state-based-viewcontroller/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2016/06/ios-10-sdk/" title="访问 开发者所需要知道的 iOS 10 SDK 新特性">开发者所需要知道的 iOS 10 SDK 新特性</a></h2>
+      <p class="excerpt">总览距离 iPhone 横空出世已经过去了 9 个年头，iOS 的版本号也跨入了两位数。在我们回顾过去四五年 iOS 系统的发展的时候，不免感叹变化速度之快，迭代周期之短。iOS 7 翻天覆地的全新设计，iOS 8 中 Size Classes 的出现，应用扩展，以及 Cloud Kit 的加入，iOS 9 里的分屏多任务特性等等。Apple 近年都是在 WWDC 发布新的系统和软件，然后在秋季和冬季 (或者来年春季) 召开硬件产品的发布会。WWDC 上每一项软件的更新其实都预示了相应的硬...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-06-15 14:10:11 +0800" class="post-list__meta--date date">2016-06-15</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/06/ios-10-sdk/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2017/06/ios-11-sdk/" title="访问 开发者所需要知道的 iOS 11 SDK 新特性">开发者所需要知道的 iOS 11 SDK 新特性</a></h2>
-      <p class="excerpt">年纪大了过了能熬夜看 WWDC 的时代了，但是还是在小小宝的哭闹和妈妈大人换尿布的催促中起了个大早。于是算趁着“热乎”把 WWDC 2017 的 Keynote 看完了。和往年差不多，虽然 WWDC 是一个开发者会议，但是 Keynote 并不是专门针对我们开发者的，它还承担了公司状况说明，新品发布等功能。作为技术人员，可能接下来的 session 会更有意义。要用一句话来评价今年 Keynote 所展现出来的内容的话，就是小步革新。大的技术方面可以说只有 ARKit 可堪研究，但是我们还...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2017-06-06 11:15:00 +0800" class="post-list__meta--date date">2017-06-06</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2017/06/ios-11-sdk/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2016/04/first-wwdc/" title="访问 写给初次参加 WWDC 的开发者的简明攻略">写给初次参加 WWDC 的开发者的简明攻略</a></h2>
+      <p class="excerpt">今天 Apple 宣布了 WWDC 16 的抽选开始，而 4 月 22 日周五将出抽选结果并开始购票。随着我们国内开发者收入水平的逐步提升，以及日益增长的与全球开发者接触和自我提高的需求，最近参与 WWDC 的中国开发者明显比以前要多，而抽选机制也正给了我们很好的参加机会，至少我们不需要熬夜和一群“疯子”在十几秒内抢票了。如果您看到这篇文章的时候已经抽中了门票，并且付款成功并计划在 6 月的时候前往三藩的话，先大声说“恭喜恭喜恭喜你”！鉴于很多的参会者可能是第一次参加 WWDC，甚至可能是...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-04-19 20:10:11 +0800" class="post-list__meta--date date">2016-04-19</time> &#8226; <span class="post-list__meta--tags tags">南箕北斗集</span><a class="btn-border-small" href=/2016/04/first-wwdc/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
     <li>
-      <h2 class="post-list__post-title post-title"><a href="/2017/04/storyboard-argue/" title="访问 再看关于 Storyboard 的一些争论">再看关于 Storyboard 的一些争论</a></h2>
-      <p class="excerpt">从 iOS 5 的时代 Apple 推出 Storyboard (以下简称 SB) 后，关于使用这种方式构建 UI 的争论就在 Cocoa 开发者社区里一直发生着。我在 2013 年写过一篇关于代码手写 UI，xib 和 SB 之间的取舍的文章。在四五年后的今天，SB 得到了多次进化，大家也积攒了很多关于使用 SB 进行开发的经验，我们不妨再回头看看当初的忧虑，并结合 SB 开发的现状，来提取一些现阶段被认为比较好的实践。这篇文章缘起为对使用 SB 的方式一文 (及其英文原文) 的回应，我...&hellip;</p>
-      <div class="post-list__meta"><time datetime="2017-04-27 09:45:00 +0800" class="post-list__meta--date date">2017-04-27</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2017/04/storyboard-argue/>继续阅读</a></div>
+      <h2 class="post-list__post-title post-title"><a href="/2016/04/objccn-plan/" title="访问 ObjC 中国的工作回顾和之后的计划">ObjC 中国的工作回顾和之后的计划</a></h2>
+      <p class="excerpt">小时候因为成绩还算凑合，所以经常会被任命做个班干部什么的。其实这并不是一份很有意思的工作，除了上课要被老师重点“关照”点名起来回答问题以外，最烦人的事情就是开学要写工作计划，期末要写工作总结了。耗时耗力不说，写出来的东西也并不会有什么人看。所以我大抵对写计划和写总结这样的事情是抵触的。顺便还希望这篇总结加计划的东西能有人有兴趣看。时隔十几二十年后，再提笔 (其实是拿键盘) 开始写一份工作回顾和计划的时候，我却是怀着满心欢喜的。从 2014 年 3 月第一个 commit 开始，ObjC 中...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-04-07 09:51:24 +0800" class="post-list__meta--date date">2016-04-07</time> &#8226; <span class="post-list__meta--tags tags">南箕北斗集</span><a class="btn-border-small" href=/2016/04/objccn-plan/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2016/03/swift-throws/" title="访问 Swift 2 throws 全解析 - 从原理到实践">Swift 2 throws 全解析 - 从原理到实践</a></h2>
+      <p class="excerpt">本文最初于 2015 年 12 月发布在 IBM developerWorks 中国网站发表，其网址是 http://www.ibm.com/developerworks/cn/mobile/mo-cn-swift/index.html。如需转载请保留此行声明。Swift 2 错误处理简介throws 关键字和异常处理机制是 Swift 2 中新加入的重要特性。Apple 希望通过在语言层面对异常处理的流程进行规范和统一，来让代码更加安全，同时让开发者可以更加及时可靠地处理这些错误。Swi...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-03-29 14:37:24 +0800" class="post-list__meta--date date">2016-03-29</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/03/swift-throws/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2016/02/swift-performance/" title="访问 Swift 性能探索和优化分析">Swift 性能探索和优化分析</a></h2>
+      <p class="excerpt">本文首发在 CSDN《程序员》杂志，订阅地址 http://dingyue.programmer.com.cn/。Apple 在推出 Swift 时就将其冠以先进，安全和高效的新一代编程语言之名。前两点在 Swift 的语法和语言特性中已经表现得淋漓尽致：像是尾随闭包，枚举关联值，可选值和强制的类型安全等都是 Swift 显而易见的优点。但是对于高效一点，就没有那么明显了。在 2014 年 WWDC 大会上 Apple 宣称 Swift 具有超越 Objective-C 的性能，甚至某些情...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-02-25 10:32:24 +0800" class="post-list__meta--date date">2016-02-25</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/02/swift-performance/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2016/01/create-framework/" title="访问 如何打造一个让人愉快的框架">如何打造一个让人愉快的框架</a></h2>
+      <p class="excerpt">  这是我在今年 1 月 10 日 @Swift 开发者大会 上演讲的文字稿。相关的视频还在制作中，没有到现场的朋友可以通过这个文字稿了解到这个 session 的内容。&lt;br&gt;虽然我的工作是程序员，但是最近半年其实我的主要干的事儿是养了一个小孩。所以这半年来可以说没有积累到什么技术，反而是积累了不少养小孩的心得。当知道了有这么次会议可以分享这半年来的心得的时候，我毫不犹豫地选定了主题。那就是  如何打造一个让人愉快的小孩但考虑到这是一次开发者会议…当我把这个想法和题目提交给大...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2016-01-19 14:32:24 +0800" class="post-list__meta--date date">2016-01-19</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2016/01/create-framework/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2015/12/2015-final/" title="访问 写在 2015 的尾巴">写在 2015 的尾巴</a></h2>
+      <p class="excerpt">上一次写类似年终总结的东西已经是大概快十年前的事情了，那时候还刚进大学，每天也就喜欢发一些无病呻吟的东西。回望之后，发现那些蹉跎掉的岁月确实无法再重新来过，不过也让我懂得了，幸好我们还能珍惜当下。今年于我来说，注定是不平凡的一年。愈到年关，写作的冲动就愈发强烈，它驱使着我去记录下些什么，所以有了这篇写给自己的“阔别已久”的年终总结。无论何时，无论何地，平安就好前几天因为北京雾霾很凶，看到有人在说柴静的雾霾报告，自己之前没看过，所以就找来补了补课。《穹顶之下》确实是一部非常好的新闻调查片子，...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2015-12-29 00:03:40 +0800" class="post-list__meta--date date">2015-12-29</time> &#8226; <span class="post-list__meta--tags tags">胡言乱语集</span><a class="btn-border-small" href=/2015/12/2015-final/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2015/10/apple-tv/" title="访问 当 App Store 遇上电视，开发者的第四代 Apple TV 开箱体验">当 App Store 遇上电视，开发者的第四代 Apple TV 开箱体验</a></h2>
+      <p class="excerpt">引子2015 年 9 月，San Francisco。今年接近 100 华氏度的气温要比往年都更热，而 Apple 例行的秋季发布会也如期在这里举行。自从 iPhone 一战成名后，每年的 iPhone 旗舰机型都是移动通讯设备的业界标杆。而今年秋季发布会大家也自然地将重点放在了最新的 iPhone 6s 上。手机乏善可陈，除了硬件参数的一些常规升级外，我们并没有看到 iPhone 有多大进步。不过这也是大家预料之中，每隔两年一款的 s 系列定位就只是对之前版本的补充。另外，更大屏幕的 i...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2015-10-31 15:49:46 +0800" class="post-list__meta--date date">2015-10-31</time> &#8226; <span class="post-list__meta--tags tags">南箕北斗集</span><a class="btn-border-small" href=/2015/10/apple-tv/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2015/09/ui-testing/" title="访问 WWDC15 Session笔记 - Xcode 7 UI 测试初窥">WWDC15 Session笔记 - Xcode 7 UI 测试初窥</a></h2>
+      <p class="excerpt">Unit Test 在 iOS 开发中已经有足够多的讨论了。Objective-C 时代除了 Xcode 集成的 XCTest 以外，还有很多的测试相关的工具链可以使用，比如专注于提供 Mock 和 Stub 的 OCMock，使用行为驱动测试的 Kiwi 或者 Specta 等等。在 Swift 中，我们可以继续使用 XCTest 来进行测试，而 Swift 的 mock 和 stub 的处理，我们甚至不需要再借助于第三方框架，而使用 Swift 自身可以在方法中内嵌类型的特性来完成。关...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2015-09-27 19:58:47 +0800" class="post-list__meta--date date">2015-09-27</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2015/09/ui-testing/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2015/08/watchos2/" title="访问 WWDC15 Session笔记 - 30 分钟开发一个简单的 watchOS 2 app">WWDC15 Session笔记 - 30 分钟开发一个简单的 watchOS 2 app</a></h2>
+      <p class="excerpt">Apple Watch 和 watchOS 第一代产品只允许用户在 iPhone 设备上进行计算，然后将结果传输到手表上进行显示。在这个框架下，手表充当的功能在很大程度上只是手机的另一块小一些的显示器。而在 watchOS 2 中，Apple 开放了在手表端直接进行计算的能力，一些之前无法完成的 app 现在也可以进行构建了。本文将通过一个很简单的天气 app 的例子，讲解一下 watchOS 2 中新引入的一些特性的使用方法。本文是我的 WWDC15 笔记中的一篇，在 WWDC15 中涉...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2015-08-03 22:23:34 +0800" class="post-list__meta--date date">2015-08-03</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2015/08/watchos2/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2015/06/multitasking/" title="访问 WWDC15 Session笔记 - iOS 9 多任务分屏要点">WWDC15 Session笔记 - iOS 9 多任务分屏要点</a></h2>
+      <p class="excerpt">本文是我的 WWDC15 笔记中的一篇，涉及的 Session 有  Getting Started with Multitasking on iPad in iOS 9  Multitasking Essentials for Media-Based Apps on iPad in iOS 9  Optimizing Your App for Multitasking on iPad in iOS 9iOS 9 多任务综述iOS 9 中最引人注目的新特性就是多任务了，在很久以前的越狱开发...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2015-06-15 15:25:07 +0800" class="post-list__meta--date date">2015-06-15</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2015/06/multitasking/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2015/06/ios9-sdk/" title="访问 开发者所需要知道的 iOS 9 SDK 新特性">开发者所需要知道的 iOS 9 SDK 新特性</a></h2>
+      <p class="excerpt">本文为InfoQ中文站特供稿件，首发地址。如需转载，请与InfoQ中文站联系。年年岁岁花相似，岁岁年年人不同。今年的 WWDC 一如既往的热闹，但是因为要照顾家里刚出生的宝宝以及宝宝的娘，就只能在家里的“窝里蹲”家庭影院来关注这一全球 Apple 开发者的盛会了。生命不息，学习不止。一如以往几年，我会陆续写一些关于 WWDC 和新的 SDK 里我觉得有意思和我自己重点关注和学习的内容。现在回头看前几年写的东西，愈来愈感觉到以前青葱岁月的自己真是傻得可爱。不过一路以来的成长轨迹倒是很明显，也...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2015-06-11 09:24:16 +0800" class="post-list__meta--date date">2015-06-11</time> &#8226; <span class="post-list__meta--tags tags">能工巧匠集</span><a class="btn-border-small" href=/2015/06/ios9-sdk/>继续阅读</a></div>
+      <hr class="post-list__divider" />
+    </li>
+    
+    <li>
+      <h2 class="post-list__post-title post-title"><a href="/2015/05/scheme/" title="访问 Scheme 初步">Scheme 初步</a></h2>
+      <p class="excerpt">之前定了每年学习一门语言的目标，自然不能轻言放弃。今年目标：简单掌握 Scheme。因为自己接触这门语言也不过寥寥数天，所以更多的会以引导的方式简单介绍语法，而不会 (也没有能力) 去探讨什么深入的东西。本文很多例程和图示参考了紫藤貴文的《もうひとつの Scheme 入門》这篇深入浅出的教程，这篇教程现在也有英译版和中译版。我自己是参照这篇教程入门的，一方面这篇教程可以说是能找到合适初学者学习的很好的材料，另一方面也希望能挑战一下自己的日文阅读能力 (结果对比日文和英文看下来发现果然还是日...&hellip;</p>
+      <div class="post-list__meta"><time datetime="2015-05-08 11:59:45 +0800" class="post-list__meta--date date">2015-05-08</time> &#8226; <span class="post-list__meta--tags tags">南箕北斗集</span><a class="btn-border-small" href=/2015/05/scheme/>继续阅读</a></div>
       <hr class="post-list__divider" />
     </li>
     
@@ -224,7 +294,7 @@
     
         <a class="newer-posts pagination__newer btn btn-small btn-tertiary" href="/#blog">&larr; 最近</a>
     
-    <span class="pagination__page-number">2 / 13</span>
+    <span class="pagination__page-number">2 / 7</span>
     
         <a class="older-posts pagination__older btn btn-small btn-tertiary" href="/page/3/#blog">更早 &rarr;</a>
     
