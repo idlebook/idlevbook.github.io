@@ -1,11 +1,11 @@
 # Basic
-title: Vno Jekyll
-subtitle: A blog-orientation theme for Jekyll
-welcome_message: <a href="https://github.com/onevcat/vno-jekyll" target="_blank">Download the theme</a>
-description: Vno Jekyll is a port of my Ghost theme vno.
-creator: <a href="http://onev.cat">@onevcat</a>
+title: idlebook
+subtitle: 但行好事，莫问前程
+welcome_message: <a href="http://idlevbook.com" target="_blank">欢迎您的访问。</a>
+description: 嗨，我是添书，一名 iOS 开发者,目前暂居深圳。
+creator: <a href="http://idlevbook.com">@idlebook</a>
 
-url: "http://vno.onevcat.com"
+url: "http://idlevbook.com"
 
 permalink: /:year/:month/:title/
 
@@ -22,7 +22,7 @@ blog_button:
 
 # Navigation buttons in the front page.
 nav:
-    - {title: Projects, description: My Projects, url: 'http://project.onevcat.com'}
+    - {title: 工具, description: 我所使用的 app 们, url: '/Apps'}
     # - {title: Another Button, description: A button, url: 'http://example.com'}
 
 # Pagination
@@ -37,11 +37,7 @@ comment:
     
 # Social
 social:
-    weibo: onevcat
-    github: onevcat
-    twitter: onevcat
-    gplus: 107108267983477358170
-    mail: onev@onevcat.com
+    mail: idlebook@163.com
 
 # Google Analytics
 ga:
