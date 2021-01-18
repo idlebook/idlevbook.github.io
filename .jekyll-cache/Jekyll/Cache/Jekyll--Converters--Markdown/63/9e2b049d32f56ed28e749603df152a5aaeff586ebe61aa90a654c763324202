@@ -1,0 +1,91 @@
+I"�<h3 id="mac命令行科学上网">Mac命令行科学上网</h3>
+<ul>
+  <li>因为终端只支持socks5代理,不像科学上网走http通道</li>
+  <li>所以,基础配置好了科学上网工具,开启了全局模式,依旧没有在命令行生效</li>
+  <li>这样,对于码农来讲,wget、curl、git、brew等命令行工具都会变得很慢。</li>
+  <li>解决方式是socks代理转http通道.</li>
+  <li>因为苹果在新系统中加入了SIP安全机制，他会阻止第三方程序向系统目录内（/System，/bin，/sbin，/usr(除了/usr/local)）进行写操作，sudo也不行。办法是先把SIP关了，等装好软件配置好后再打开SIP。或者改用其他软件,proxychains-NG等软件就不太好搞了</li>
+  <li>第一种工具是使用ClashX, 自带终端命令代理工具</li>
+  <li>第二种用的是privoxy,它刚好就是安装在/usr/local内，不需要关闭SIP也可以正常使用。</li>
+</ul>
+
+<h3 id="1clashx推荐使用">1.ClashX(推荐使用)</h3>
+<ul>
+  <li><a href="https://github.com/yichengchen/clashX/releases">下载地址</a></li>
+  <li>
+    <p>配置: 根据网络提供商配置好相关条件
+<img src="/media/14973778801128/twoBank1.jpg" alt="twoBank1" /></p>
+  </li>
+  <li>
+    <p>使用: 复制到终端命令即刻
+<img src="/media/14973778801128/twoBank3.jpg" alt="twoBank3" /></p>
+  </li>
+  <li>测试: Github中Clone代码速度可达M级别</li>
+</ul>
+
+<p><img src="/media/14973778801128/twoBank4.jpg" alt="twoBank4" /></p>
+
+<h4 id="2privoxy安装">2.privoxy(安装)</h4>
+<ul>
+  <li>用brew安装</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> --><td class="rouge-code"><pre>brew install privoxy
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<ul>
+  <li>privoxy配置</li>
+  <li>打开配置文件 /usr/local/etc/privoxy/config</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> --><td class="rouge-code"><pre>vim /usr/local/etc/privoxy/config
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>加入下面这两项配置项</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> --><td class="rouge-code"><pre>listen-address 0.0.0.0:8118 forward-socks5 / localhost:1080 .
+</pre></td></tr></tbody></table></code></pre></div></div>
+<blockquote>
+  <p>第一行设置privoxy监听任意IP地址的8118端口。第二行设置本地socks5代理客户端端口，注意不要忘了最后有一个空格和点号。</p>
+</blockquote>
+
+<h4 id="启动privoxy">启动privoxy</h4>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> --><td class="rouge-code"><pre>sudo /usr/local/sbin/privoxy /usr/local/etc/privoxy/config
+</pre></td></tr></tbody></table></code></pre></div></div>
+<blockquote>
+  <p>因为没有安装在系统目录内，所以启动的时候需要打全路径。</p>
+</blockquote>
+
+<h4 id="查看是否启动成功">查看是否启动成功</h4>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> --><td class="rouge-code"><pre>netstat -na | grep 8118
+</pre></td></tr></tbody></table></code></pre></div></div>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> --><td class="rouge-code"><pre>tcp4 0 0 *.8118 *.* LISTEN
+</pre></td></tr></tbody></table></code></pre></div></div>
+<blockquote>
+  <p>看到有类似如下信息就表示启动成功了,如果没有，可以查看日志信息，判断哪里出了问题。打开配置文件找到 logdir 配置项，查看log文件</p>
+</blockquote>
+
+<h4 id="privoxy使用">privoxy使用</h4>
+<ul>
+  <li>在命令行终端中输入如下命令后, 即可科学上网了.</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> --><td class="rouge-code"><pre>export http_proxy='http://localhost:8118' export https_proxy='http://localhost:8118'
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>取消</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> --><td class="rouge-code"><pre>unset http_proxy unset https_proxy
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+:ET

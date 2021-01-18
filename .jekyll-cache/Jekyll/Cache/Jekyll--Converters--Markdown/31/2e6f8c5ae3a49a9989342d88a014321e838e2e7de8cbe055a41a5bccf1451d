@@ -1,0 +1,301 @@
+I"{2<h3 id="cadisplaylinknstimer使用注意">CADisplayLink、NSTimer使用注意</h3>
+<ul>
+  <li>CADisplayLink、NSTimer会对target产生强引用，如果target又对它们产生强引用，那么就会引发循环引用</li>
+</ul>
+
+<h5 id="定时器解决方案">定时器解决方案</h5>
+<ul>
+  <li>利用block的弱指针捕获特性,然而CADisplayLink并没有block方法
+    <ul>
+      <li><img src="/media/15422034967015/15422036535835.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li><strong>不可以使用的方法</strong>,把weakSelf传入target中,原因:传入的对象是形参,内部实参target内部还是对当前对象进行强引用(实参/形参本质还是内存地址)</li>
+  <li>采取中间对象的方式处理(<strong>消息转发应用场景之一)</strong>
+    <ul>
+      <li><img src="/media/15422034967015/15422038486618.jpg" alt="" /></li>
+      <li>分析,当pop时候,由于没有强指针指向viewContoller,vc -&gt; NSTimer-&gt;otherobject(销毁)</li>
+    </ul>
+  </li>
+  <li>NSProxy: 和 NSObject 同级对象为积累,遵守NSObject协议,专门做消息转发</li>
+  <li>不同是如果没有实现方法, 直接从本类进行转发,不会从父类开始查找,效率更高</li>
+  <li>很多方法都已经和NSObject不一样,比如iskandofclass, 直接进行消息转发</li>
+</ul>
+
+<h4 id="nstimecadisplaylinknstimer-不准的原因">NSTimeCADisplayLink、NSTimer 不准的原因</h4>
+<ul>
+  <li>他们都是基于Runloop机制运行,Runloop是循环跑圈,每一圈的任务时间是不一样,而定时器事件是到了一定的事件 &amp;&amp; 刚好跑圈到该任务才会执行</li>
+  <li>解决方法是是CGD的定时器,和内核挂钩,不受Runloop的影响,很准时的一种方案</li>
+  <li>CGD要执行必须有一个强指针引用, 在类方法中,可采取静态变量</li>
+</ul>
+
+<h3 id="ios程序的内存布局">iOS程序的内存布局</h3>
+<ul>
+  <li><img src="/media/15422034967015/15422895361277.jpg" alt="" /></li>
+  <li>代码段：编译之后的代码
+ (.h .m 文件中的二进制代码)</li>
+  <li>数据段
+    <ul>
+      <li>字符串常量：比如NSString *str = @”123”</li>
+      <li>已初始化数据：已初始化的全局变量、静态变量等</li>
+      <li>未初始化数据：未初始化的全局变量、静态变量等</li>
+    </ul>
+  </li>
+  <li>栈：函数调用开销，比如局部变量。分配的内存空间地址越来越小(向下增长)</li>
+  <li><strong>堆：通过alloc、malloc、calloc等动态分配的空间，分配的内存空间地址越来越大(向上增长)</strong> 所以, alloc 出来的对象是在堆中,指针才是在栈中</li>
+</ul>
+
+<h4 id="封装设计">封装设计</h4>
+<ul>
+  <li>考虑继承社么类,如果是GCD的封装,就要考虑要不要直接拿到子类可能会做一些破坏性的操作</li>
+  <li>考虑外接需要什么参数</li>
+  <li>校验参数</li>
+  <li>考虑安全(多线程)(操作字典的读取)
+    <h3 id="tagged-pointer标记指针技术">Tagged Pointer(标记指针技术)</h3>
+  </li>
+  <li>从64bit开始，iOS引入了Tagged Pointer技术，用于优化NSNumber、NSDate、NSString等小对象的存储</li>
+  <li>在没有使用Tagged Pointer之前， NSNumber等对象需要动态分配内存、维护引用计数等，NSNumber指针存储的是堆中NSNumber对象的地址值</li>
+  <li>使用Tagged Pointer之后，NSNumber指针里面存储的数据变成了：Tag + Data，也就是将数据直接存储在了指针中</li>
+  <li>当指针不够存储数据时，才会使用动态分配内存的方式来存储数据</li>
+  <li>objc_msgSend能识别Tagged Pointer，比如NSNumber的intValue方法，直接从指针提取数据，节省了以前的调用开销</li>
+  <li>如何判断一个指针是否为Tagged Pointer？
+    <ul>
+      <li>iOS平台，最高有效位是1（第64bit）</li>
+      <li>Mac平台，最低有效位是1</li>
+    </ul>
+  </li>
+  <li>在没有使用TagPoint技术之前
+    <ul>
+      <li><img src="/media/15422034967015/15422898442754.jpg" alt="" /></li>
+      <li>一个指针 + 一个对象的内存空间 = 8 + 16 只是24个字节</li>
+      <li>采取TagPoint技术把值存在之中,只需要8个字节</li>
+    </ul>
+  </li>
+  <li><img src="/media/15422034967015/15422899547715.jpg" alt="" />
+    <ul>
+      <li>会奔溃, 报坏内存访问</li>
+      <li>本质上调用set方法,ARC实质是MRC,set方法本质(旧值释放,赋值新值)</li>
+      <li>
+        <p><img src="/media/15422034967015/15422902049554.jpg" alt="" /></p>
+      </li>
+      <li>多线程访问有可能同时访问release方法,造成过度释放</li>
+      <li>解决方法
+        <ul>
+          <li>属性采用atomic,保证set/get 方法线程安全</li>
+          <li>在需要的位置采取锁的方案</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><img src="/media/15422034967015/15422902268533.jpg" alt="" />
+    <ul>
+      <li>这个正常运行,原因是不涉及到对象的访问,采取的是tagPoint技术,直接取值</li>
+      <li>[@(10) interValue] 这句话会进入消息发送,但是会判断是否为tagPoint,并没有对象,找到isa指针去消息发送的后续流程</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="oc对象内存管理">OC对象内存管理</h3>
+<ul>
+  <li>在iOS中，使用引用计数来管理OC对象的内存</li>
+  <li>一个新创建的OC对象引用计数默认是1，当引用计数减为0，OC对象就会销毁，释放其占用的内存空间</li>
+  <li>调用retain会让OC对象的引用计数+1，调用release会让OC对象的引用计数-1</li>
+  <li>内存管理的经验总结
+    <ul>
+      <li>当调用alloc、new、copy、mutableCopy方法返回了一个对象，在不需要这个对象时，要调用release或者autorelease来释放它</li>
+      <li>想拥有某个对象，就让它的引用计数+1；不想再拥有某个对象，就让它的引用计数-1</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="mrc时代">MRC时代</h4>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+</pre></td> --><td class="rouge-code"><pre>- (void)setDog:(MJDog *)dog
+{
+    if (_dog != dog) { // 判断传入的值是否为新值,避免释放后产生野指针错误
+        [_dog release];
+        _dog = [dog retain];
+    }
+}
+
+
+- (void)dealloc
+{
+//    [_dog release];
+//    _dog = nil;
+// 等同于上两句, 调用set方法,设为nil避免产生野指针错误
+    self.dog = nil;
+    self.car = nil;
+    
+    NSLog(@"%s", __func__);
+    
+    // 父类的dealloc放到最后
+    [super dealloc];
+}
+
+// 开始的时候编译器只会生成get,set方法的声明,后期实现和成员变量都会实现
+@property (nonatomic, retain) MJDog *dog;
+ // 自动生成成员变量和属性的setter、getter实现
+@synthesize age = _age;
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h4 id="copy">COPY</h4>
+<ul>
+  <li>拷贝的目的：产生一个副本对象，跟源对象互不影响
+    <ul>
+      <li>修改了源对象，不会影响副本对象</li>
+      <li>修改了副本对象，不会影响源对象</li>
+    </ul>
+  </li>
+  <li>iOS提供了2个拷贝方法
+    <ul>
+      <li>copy，不可变拷贝，产生不可变副本</li>
+      <li>mutableCopy，可变拷贝，产生可变副本</li>
+    </ul>
+  </li>
+  <li>深拷贝和浅拷贝
+    <ul>
+      <li>深拷贝：内容拷贝，产生新的对象</li>
+      <li>浅拷贝：指针拷贝，没有产生新的对象</li>
+    </ul>
+  </li>
+  <li><img src="/media/15422034967015/15424615355112.jpg" alt="" />
+    <ul>
+      <li>怎么理解str1和str2为相同的内存地址</li>
+      <li>拷贝的目的是产生不同的副本,互不影响.但由于str1为不可变,不可能修改,也就不会产生新的对象,干脆就让str2执行同一块内存地址,为浅拷贝</li>
+      <li>相当于[str1 retain]</li>
+      <li>有些时候, [str1 retaincount] = -1 ,那是因为不是对象,采取的是tagPint技术,不属于对象内存管理范围之内</li>
+    </ul>
+  </li>
+  <li><img src="/media/15422034967015/15424617236042.jpg" alt="" />
+    <ul>
+      <li>判断是否为浅拷贝还是深拷贝,看是否产生了新的对象</li>
+    </ul>
+  </li>
+  <li>对象的拷贝
+    <ul>
+      <li>@properpy的修饰词为什么只有copy,没有mutalCopy?</li>
+      <li>是为了通用型,在Founation框架中,有些类如(NSstring,NSDate)是有可变类型, 而OC对象的其他类提供更加灵活的copy方案,遵守NSCOpying协议,返回一块存储空间让我们自己去实现</li>
+      <li>在UI的显示文本中,一般都是copy,原因是不希望显示的过程中被其他地方修改,应有修改后主动刷新更加合理,也辅助印证为社么属性中没有mutalCopy关键字</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="引用计数的存储">引用计数的存储</h4>
+<ul>
+  <li>在64bit中，引用计数可以直接存储在优化过的isa指针中，也可能存储在SideTable类中</li>
+  <li><img src="/media/15422034967015/15424622523919.jpg" alt="" /></li>
+  <li>refcnts是一个存放着对象引用计数的散列表</li>
+  <li>如果19位数不够用了,就会外挂散列表</li>
+  <li>有spinlock 锁,弱引用计数表(也是哈希表), 引用计数表</li>
+</ul>
+
+<h4 id="dealloc">dealloc</h4>
+<ul>
+  <li>weak的实现原理
+    <ul>
+      <li>当一个对象要释放时，会自动调用dealloc，接下的调用轨迹是</li>
+      <li><img src="/media/15422034967015/15424625163312.jpg" alt="" /></li>
+      <li>weak是ARC新增的关键词,所以说,weak的实现过程是由Runtime运行过程中检测对象的dealloc过程中实现的,所以ARC是由LLVM + Runtime协作的结果</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="autoreleasepool">autoreleasepool</h4>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td> --><td class="rouge-code"><pre>int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+// 入栈       atautoreleasepoolobj = objc_autoreleasePoolPush();
+        
+        for (int i = 0; i &lt; 1000; i++) {
+            MJPerson *person = [[[MJPerson alloc] init] autorelease];
+        } // 8000个字节
+        
+//  出栈      objc_autoreleasePoolPop(atautoreleasepoolobj);
+    }
+    return 0;
+}
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>自动释放池的主要底层数据结构是：__AtAutoreleasePool、AutoreleasePoolPage</li>
+  <li>调用了autorelease的对象最终都是通过AutoreleasePoolPage对象来管理的</li>
+  <li><img src="/media/15422034967015/15424628329326.jpg" alt="" />
+    <ul>
+      <li>thraed: 和线程一一对应</li>
+      <li>child&amp;parent: 双向链表结构</li>
+      <li>next指针: 指向下一个可以压栈的空间</li>
+    </ul>
+  </li>
+  <li>每个AutoreleasePoolPage对象占用4096字节内存，除了用来存放它内部的成员变量，剩下的空间用来存放autorelease对象的地址</li>
+  <li>所有的AutoreleasePoolPage对象通过双向链表的形式连接在一起</li>
+  <li><img src="/media/15422034967015/15424629239282.jpg" alt="" />
+    <ul>
+      <li>调用push(压栈)方法会将一个POOL_BOUNDARY入栈，并且返回其存放的内存地址</li>
+      <li>POOL_BOUNDARY为0,为哨兵对象</li>
+      <li>调用pop方法时传入一个POOL_BOUNDARY的内存地址，会从最后一个入栈的对象开始发送release消息，直到遇到这个POOL_BOUNDARY</li>
+      <li>id *next指向了下一个能存放autorelease对象地址的区域</li>
+      <li>多层aotuRealePool嵌套本质上就是压入一个POOL_BOUNDARY,并且返回其存放的内存地址</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="runloop和autorelease">Runloop和Autorelease</h4>
+<ul>
+  <li>iOS在主线程的Runloop中注册了2个Observer</li>
+  <li>第1个Observer监听了kCFRunLoopEntry事件，会调用objc_autoreleasePoolPush()</li>
+  <li>第2个Observer
+    <ul>
+      <li>监听了kCFRunLoopBeforeWaiting事件，会调用objc_autoreleasePoolPop()、objc_autoreleasePoolPush()</li>
+      <li>局部变量在什么时候释放在如果编译器是在生成的是[obj autorease],那么在runLoop即将进入休眠的时候释放,如果是[objc relase],那么在作用域结束释放,更准确来说,是引用计数减一</li>
+      <li>借此可以判断是否处于同一个RunLoopz周期</li>
+      <li>监听了kCFRunLoopBeforeExit事件，会调用objc_autoreleasePoolPop()</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="有趣的花边">有趣的花边</h4>
+<ul>
+  <li>如果地址(64位)是最后一位是0,代表4个二进制为,那么一定为对象</li>
+</ul>
+
+:ET

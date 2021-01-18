@@ -1,0 +1,571 @@
+I"s�<h3 id="lru缓存机制">LRU缓存机制</h3>
+
+<h4 id="描述">描述</h4>
+
+<p>运用你所掌握的数据结构，设计和实现一个  LRU (最近最少使用) 缓存机制。它应该支持以下操作： 获取数据 get 和 写入数据 put 。</p>
+
+<p>获取数据 get(key) - 如果密钥 (key) 存在于缓存中，则获取密钥的值（总是正数），否则返回 -1。
+写入数据 put(key, value) - 如果密钥已经存在，则变更其数据值；如果密钥不存在，则插入该组「密钥/数据值」。当缓存容量达到上限时，它应该在写入新数据之前删除最久未使用的数据值，从而为新的数据值留出空间。</p>
+
+<p> </p>
+
+<p>进阶:</p>
+
+<p>你是否可以在 O(1) 时间复杂度内完成这两种操作？</p>
+
+<p>示例:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td> --><td class="rouge-code"><pre>
+<span class="nc">LRUCache</span> <span class="n">cache</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">LRUCache</span><span class="o">(</span> <span class="mi">2</span>  <span class="o">);</span>
+
+<span class="n">cache</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">1</span><span class="o">);</span>
+<span class="n">cache</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="mi">2</span><span class="o">);</span>
+<span class="n">cache</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>       <span class="c1">// 返回  1</span>
+<span class="n">cache</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="mi">3</span><span class="o">,</span> <span class="mi">3</span><span class="o">);</span>    <span class="c1">// 该操作会使得密钥 2 作废</span>
+<span class="n">cache</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>       <span class="c1">// 返回 -1 (未找到)</span>
+<span class="n">cache</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="mi">4</span><span class="o">,</span> <span class="mi">4</span><span class="o">);</span>    <span class="c1">// 该操作会使得密钥 1 作废</span>
+<span class="n">cache</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>       <span class="c1">// 返回 -1 (未找到)</span>
+<span class="n">cache</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">3</span><span class="o">);</span>       <span class="c1">// 返回  3</span>
+<span class="n">cache</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="mi">4</span><span class="o">);</span>       <span class="c1">// 返回  4</span>
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/lru-cache
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。</p>
+
+<h4 id="思路">思路</h4>
+<ul>
+  <li>时间复杂度维持为0(1),而且是key-value的操作,那么最先想到的是HashMap</li>
+  <li>
+    <p>由于插入也要0(1),系统的链表是也有双向链表,但无法拿到pre,next指针,可考虑自己实现</p>
+  </li>
+  <li>
+    <p>把使用过的节点不断插入第一个位置,意味着往后元素一直往后移,那么最后一个元素必然是很久没使用的</p>
+  </li>
+  <li>虚拟头结点的作用是做到有始有终,避免空指针的情况.</li>
+</ul>
+
+<h4 id="实现">实现</h4>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+</pre></td> --><td class="rouge-code"><pre>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">LRUCache</span> <span class="o">{</span>
+	
+	   <span class="nc">HashMap</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">,</span> <span class="nc">Node</span><span class="o">&gt;</span> <span class="n">map</span><span class="o">;</span>
+	   
+	   <span class="nc">Node</span>  <span class="n">fistNode</span><span class="o">;</span>
+	   
+	   <span class="nc">Node</span> <span class="n">lasNode</span><span class="o">;</span>
+	   
+	   <span class="kt">int</span> <span class="n">capacity</span><span class="o">;</span>
+
+	    <span class="kd">public</span> <span class="nf">LRUCache</span><span class="o">(</span><span class="kt">int</span> <span class="n">capacity</span><span class="o">)</span> <span class="o">{</span>
+	    	<span class="n">map</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashMap</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">,</span> <span class="nc">Node</span><span class="o">&gt;(</span><span class="n">capacity</span><span class="o">);</span>
+	    	<span class="n">fistNode</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Node</span><span class="o">();</span>
+	    	<span class="n">lasNode</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Node</span><span class="o">();</span>
+	    	
+	    	<span class="k">this</span><span class="o">.</span><span class="na">capacity</span> <span class="o">=</span> <span class="n">capacity</span><span class="o">;</span>
+	    	<span class="c1">// 初始化工作</span>
+	    	<span class="n">fistNode</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">lasNode</span><span class="o">;</span>
+	    	<span class="n">lasNode</span><span class="o">.</span><span class="na">pre</span> <span class="o">=</span> <span class="n">fistNode</span><span class="o">;</span>
+
+	    <span class="o">}</span>
+	    
+	    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">get</span><span class="o">(</span><span class="kt">int</span> <span class="n">key</span><span class="o">)</span> <span class="o">{</span>
+	    	<span class="k">if</span> <span class="o">(</span><span class="n">map</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">key</span><span class="o">)</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+	    		<span class="k">return</span> <span class="o">-</span> <span class="mi">1</span><span class="o">;</span>
+	    	<span class="o">}</span>
+	    	<span class="nc">Node</span> <span class="n">node</span> <span class="o">=</span>  <span class="n">map</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">key</span><span class="o">);</span>
+           <span class="c1">// 删除是为了添加</span>
+	        <span class="n">removeNode</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+	        <span class="n">addfirst</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+	    	
+
+	    	<span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="na">value</span><span class="o">;</span>
+	    <span class="o">}</span>
+	    
+	    <span class="kd">private</span> <span class="nc">Node</span> <span class="nf">removeNode</span><span class="o">(</span><span class="nc">Node</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+			<span class="c1">// TODO Auto-generated method stub</span>
+	    	<span class="c1">// 删除只需要维护前一个节点和后一个节点的关系即可</span>
+	    	<span class="n">node</span><span class="o">.</span><span class="na">pre</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
+	    	<span class="n">node</span><span class="o">.</span><span class="na">next</span><span class="o">.</span><span class="na">pre</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="na">pre</span><span class="o">;</span>	
+	    	<span class="k">return</span> <span class="n">node</span><span class="o">;</span>
+		<span class="o">}</span>
+
+		<span class="kd">private</span> <span class="kt">void</span> <span class="nf">addfirst</span><span class="o">(</span><span class="nc">Node</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+			<span class="c1">// TODO Auto-generated method stub</span>
+			<span class="c1">// 维护下个节点的关系</span>
+	    	<span class="n">node</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">fistNode</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
+	    	<span class="n">fistNode</span><span class="o">.</span><span class="na">next</span><span class="o">.</span><span class="na">pre</span> <span class="o">=</span> <span class="n">node</span><span class="o">;</span>
+	    	
+	    	<span class="c1">// 维护与first节点的关系</span>
+	    	<span class="n">node</span><span class="o">.</span><span class="na">pre</span> <span class="o">=</span> <span class="n">fistNode</span><span class="o">;</span>
+	    	<span class="n">fistNode</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">node</span><span class="o">;</span>
+
+		<span class="o">}</span>
+
+		<span class="kd">public</span> <span class="kt">void</span> <span class="nf">put</span><span class="o">(</span><span class="kt">int</span> <span class="n">key</span><span class="o">,</span> <span class="kt">int</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+			<span class="nc">Node</span> <span class="n">node</span> <span class="o">=</span> <span class="n">map</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">key</span><span class="o">);</span>
+			<span class="k">if</span> <span class="o">(</span><span class="n">node</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// 插入已经存在的</span>
+			   <span class="n">node</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+			   <span class="n">removeNode</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+			   <span class="n">addfirst</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+			<span class="o">}</span><span class="k">else</span>  <span class="o">{</span> <span class="c1">//  插入新的键值对</span>
+				
+				 <span class="k">if</span> <span class="o">(</span><span class="n">map</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">==</span> <span class="n">capacity</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//不存在且要淘汰最后一个</span>
+					 <span class="n">removeNode</span><span class="o">(</span><span class="n">map</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">lasNode</span><span class="o">.</span><span class="na">pre</span><span class="o">.</span><span class="na">key</span><span class="o">));</span>
+
+				 <span class="o">}</span>
+
+				<span class="n">map</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">key</span><span class="o">,</span> <span class="n">node</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Node</span><span class="o">(</span><span class="n">key</span><span class="o">,</span> <span class="n">value</span><span class="o">));</span>
+
+			    <span class="n">addfirst</span><span class="o">(</span><span class="n">node</span><span class="o">);</span>
+
+			<span class="o">}</span>
+	    <span class="o">}</span>
+	    
+	    <span class="kd">private</span> <span class="kd">class</span> <span class="nc">Node</span> <span class="o">{</span>
+	    	<span class="kt">int</span> <span class="n">key</span><span class="o">;</span>
+	    	<span class="kt">int</span> <span class="n">value</span><span class="o">;</span>
+	    	<span class="nc">Node</span> <span class="n">pre</span><span class="o">;</span>
+	    	<span class="nc">Node</span> <span class="n">next</span><span class="o">;</span>
+	    	
+
+			<span class="kd">public</span> <span class="nf">Node</span><span class="o">(</span><span class="kt">int</span> <span class="n">key</span><span class="o">,</span> <span class="kt">int</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+				<span class="kd">super</span><span class="o">();</span>
+				<span class="k">this</span><span class="o">.</span><span class="na">key</span> <span class="o">=</span> <span class="n">key</span><span class="o">;</span>
+				<span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+			
+			<span class="o">}</span>
+
+			<span class="kd">public</span> <span class="nf">Node</span><span class="o">()</span> <span class="o">{}</span>
+	    	
+	    <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h3 id="快速幂">快速幂</h3>
+<h4 id="描述-1">描述</h4>
+<p>实现 pow(x, n) ，即计算 x 的 n 次幂函数。</p>
+
+<p>示例 1:</p>
+
+<p>输入: 2.00000, 10
+输出: 1024.00000
+示例 2:</p>
+
+<p>输入: 2.10000, 3
+输出: 9.26100
+示例 3:</p>
+
+<p>输入: 2.00000, -2
+输出: 0.25000
+解释: 2-2 = 1/22 = 1/4 = 0.25
+说明:</p>
+
+<p>-100.0 &lt; x &lt; 100.0
+n 是 32 位有符号整数，其数值范围是 [−2^31, 2^31 − 1] 。</p>
+
+<p>来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/powx-n
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。</p>
+
+<h4 id="思路-1">思路</h4>
+<ul>
+  <li>递归写法
+    <ul>
+      <li>分治思想,分奇偶数,对半砍,</li>
+      <li>
+        <p>不断将两个序列平均分割,直到不能分割为止,然后不断向上合并,直到问题的解</p>
+      </li>
+      <li>负数向右移, -1还是-1, 原因是  每向右移一位,都会舍弃一位,符号位有1占位</li>
+      <li>递推式公式推时间复杂度</li>
+    </ul>
+  </li>
+  <li>非递归写法
+    <ul>
+      <li>
+        <p>从规律看出,把幂分解为二进制,每一位都是相乘的结果,最终结果可根据位数是否为0还是1决定相乘</p>
+      </li>
+      <li>
+        <p>向右移动一位 和 1 与上(&amp;)就是取最后一位的数值.</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>负数且奇数的情况下, 比如-7 » 2 = -4 , 绝对值会向上取整</strong></p>
+  </li>
+  <li>快速幂中取模公式, 应用场景在快速幂非常大的值,也就是x,y,不能一次性计算,否则会溢出,正确方案是边计算幂边取模</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><!-- <td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+</pre></td> --><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">_13_50_Pow</span> <span class="o">{</span>
+	   <span class="kd">public</span> <span class="kt">double</span> <span class="nf">myPow</span><span class="o">(</span><span class="kt">double</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">n</span><span class="o">)</span> <span class="o">{</span>
+		   <span class="c1">// ❓1&gt; 为什么要用long , 这个是二进制, 和说明有什么关系?</span>
+		   <span class="cm">/*
+		    * 说明:
+			-	100.0 &lt; x &lt; 100.0
+			n 是 32 位有符号整数，其数值范围是 [−2^31, 2^31 − 1] 。
+		    */</span>
+		   
+		   <span class="c1">// ✅: 二进制位就有这么多, 因为正数比负数少一个1, 所以-2^31 -&gt; 2^31, 会Int的情况下会溢出,所以要先转化为long</span>
+		   <span class="kt">long</span> <span class="n">y</span>  <span class="o">=</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">n</span> <span class="o">:</span> <span class="o">-(</span><span class="kt">long</span><span class="o">)</span><span class="n">n</span><span class="o">;</span>
+		   
+<span class="c1">//		   int y  = n &gt; 0 ? n : -n;</span>
+
+		   <span class="kt">double</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
+		   <span class="k">while</span> <span class="o">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+			   <span class="k">if</span> <span class="o">((</span><span class="n">y</span>  <span class="o">&amp;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">==</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+				   <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">*</span> <span class="n">x</span><span class="o">;</span>
+			   <span class="o">}</span>
+			   <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="o">;</span>
+			   <span class="c1">// 舍弃掉最后一个二进制位</span>
+			   <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&gt;&gt;</span><span class="mi">1</span><span class="o">;</span>
+		   <span class="o">}</span>
+		   
+		   <span class="k">return</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">result</span> <span class="o">:</span> <span class="o">(</span><span class="mi">1</span><span class="o">/</span><span class="n">result</span><span class="o">);</span>
+	    <span class="o">}</span>
+	   <span class="cm">/*
+	    * 假设, x = 2, n  = 2
+	    * 第 0 层, n = 2, 进入第一层(n = 1)
+	    * 第1层,   n = 1, 进入第二层(n = 0)
+	    * 第二层, n = 0, 返回值为1, 返回第一层
+	    * 第一层, n = 1, 为奇数, 返回值为1*  2 = 2, 返回第0层
+	    * 第0层, n = 2,  为偶数, 返回值为 half = 4;
+	    */</span>
+	   
+	   <span class="c1">// T(n)= T(n/2)+ O(1)= </span>
+	    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">double</span> <span class="nf">myPow2</span><span class="o">(</span><span class="kt">double</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">n</span><span class="o">)</span> <span class="o">{</span>
+	    	<span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="k">return</span> <span class="mi">1</span><span class="o">;</span>
+	    	<span class="kt">double</span> <span class="n">half</span> <span class="o">=</span> <span class="n">myPow2</span><span class="o">(</span><span class="n">x</span><span class="o">,</span> <span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="o">);</span>
+	    	<span class="n">half</span>  <span class="o">=</span> <span class="n">half</span> <span class="o">*</span> <span class="n">half</span><span class="o">;</span>
+	    	<span class="k">return</span> <span class="n">half</span><span class="o">;</span>
+	    <span class="o">}</span>
+	    
+	    
+	    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">double</span> <span class="nf">myPow3</span><span class="o">(</span><span class="kt">double</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">n</span><span class="o">)</span> <span class="o">{</span>
+	        <span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="k">return</span> <span class="mi">1</span><span class="o">;</span>
+	        <span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="o">)</span> <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="o">;</span>
+	        
+	        <span class="kt">double</span> <span class="n">half</span> <span class="o">=</span> <span class="n">myPow3</span><span class="o">(</span><span class="n">x</span><span class="o">,</span> <span class="n">n</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="o">);</span>
+	        <span class="n">half</span> <span class="o">*=</span> <span class="n">half</span><span class="o">;</span>
+	        <span class="c1">// 是否为奇数</span>
+	        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">half</span><span class="o">);</span>
+	        
+	       <span class="c1">//  3&gt;负数且奇数的情况下, 比如-7 &gt;&gt; 2 = -4 , 绝对值会向上取整</span>
+	        <span class="c1">// 比如 2^-21 = 2^-11 * 2^-11 * 2</span>
+	        <span class="k">return</span> <span class="o">((</span><span class="n">n</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">==</span> <span class="mi">1</span><span class="o">)</span> <span class="o">?</span> <span class="o">(</span><span class="n">half</span> <span class="o">*</span> <span class="n">x</span><span class="o">)</span> <span class="o">:</span> <span class="n">half</span><span class="o">;</span>
+	    <span class="o">}</span>
+	    
+	    
+	    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">double</span> <span class="nf">myPowMod</span><span class="o">(</span><span class="kt">double</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">n</span><span class="o">,</span> <span class="kt">int</span> <span class="n">z</span><span class="o">)</span> <span class="o">{</span>
+	        <span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="k">return</span> <span class="mi">1</span><span class="o">;</span>
+	        <span class="k">if</span> <span class="o">(</span><span class="n">n</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="o">)</span> <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="o">;</span>
+	        
+	        <span class="c1">// 偶数:  2^100  % z = (2^50 * 2^50) %z = (2^50 %z * 2^50 %z ) %z, (2^50 %z 就是递归的half</span>
+	        <span class="c1">// 奇数: 2 ^101 % z =  (2^50 * 2^50 * 2^1) %z  =  (2^50 %z * 2^50 %z * 2 %z ) %z</span>
+	        <span class="kt">double</span> <span class="n">half</span> <span class="o">=</span> <span class="n">myPowMod</span><span class="o">(</span><span class="n">x</span><span class="o">,</span> <span class="n">n</span> <span class="o">&gt;&gt;</span><span class="mi">1</span><span class="o">,</span> <span class="n">z</span><span class="o">);</span>
+	        <span class="n">half</span>  <span class="o">=</span> <span class="n">half</span> <span class="o">*</span> <span class="n">half</span><span class="o">;</span>
+	        <span class="c1">// 是否为奇数</span>
+<span class="c1">//	        System.out.println(half);</span>
+	         <span class="k">if</span> <span class="o">((</span><span class="n">n</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">==</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span> 
+	        	<span class="k">return</span> <span class="n">half</span> <span class="o">=</span>  <span class="o">(</span><span class="n">half</span> <span class="o">*</span> <span class="o">(</span><span class="n">x</span> <span class="o">%</span><span class="n">z</span><span class="o">))</span> <span class="o">%</span><span class="n">z</span><span class="o">;</span>
+	         <span class="o">}</span><span class="k">else</span> <span class="o">{</span>
+	        	 <span class="k">return</span> <span class="n">half</span> <span class="o">%</span> <span class="n">z</span><span class="o">;</span>
+	         <span class="o">}</span>
+	        
+	        
+	       <span class="c1">//  3&gt;负数且奇数的情况下, 比如-7 &gt;&gt; 2 = -4 , 绝对值会向上取整</span>
+	        <span class="c1">// 比如 2^-21 = 2^-11 * 2^-11 * 2</span>
+<span class="c1">//	        return ((n &amp; 1) == 1) ? (half * x) : half;</span>
+	    <span class="o">}</span>
+	    
+	    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+<span class="c1">//			System.out.println(myPow3(2, 3));</span>
+	    	
+	    	 <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">myPowMod1</span><span class="o">(-</span><span class="mi">123</span><span class="o">,</span> <span class="mi">455</span><span class="o">,</span> <span class="mi">789</span><span class="o">));</span>
+	         <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">myPowMod</span><span class="o">(-</span><span class="mi">123</span><span class="o">,</span> <span class="mi">455</span><span class="o">,</span> <span class="mi">789</span><span class="o">));</span>
+	         
+	         <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">powMod3</span><span class="o">(-</span><span class="mi">123</span><span class="o">,</span> <span class="mi">455</span><span class="o">,</span> <span class="mi">789</span><span class="o">));</span>
+
+	         
+	    	
+		<span class="o">}</span>
+	    
+	    
+	    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">powMod3</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">,</span> <span class="kt">int</span> <span class="n">z</span><span class="o">)</span> <span class="o">{</span>
+	        <span class="k">if</span> <span class="o">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">z</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+	        <span class="kt">int</span> <span class="n">res</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">%</span> <span class="n">z</span><span class="o">;</span>
+	        <span class="n">x</span> <span class="o">%=</span> <span class="n">z</span><span class="o">;</span>
+	        <span class="k">while</span> <span class="o">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+	            <span class="k">if</span> <span class="o">((</span><span class="n">y</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">==</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+	                <span class="c1">// 如果最后一个二进制位是1，就累乘上x</span>
+	                <span class="n">res</span> <span class="o">=</span> <span class="o">(</span><span class="n">res</span> <span class="o">*</span> <span class="n">x</span><span class="o">)</span> <span class="o">%</span> <span class="n">z</span><span class="o">;</span>
+	            <span class="o">}</span>
+	            <span class="n">x</span> <span class="o">=</span> <span class="o">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="o">)</span> <span class="o">%</span> <span class="n">z</span><span class="o">;</span>
+	            <span class="c1">// 舍弃掉最后一个二进制位</span>
+	            <span class="n">y</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="o">;</span>
+	        <span class="o">}</span>
+	        <span class="k">return</span> <span class="n">res</span><span class="o">;</span>
+	    <span class="o">}</span>
+	    
+	    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">double</span> <span class="nf">myPowMod1</span><span class="o">(</span><span class="kt">double</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">n</span><span class="o">,</span> <span class="kt">int</span> <span class="n">z</span><span class="o">)</span> <span class="o">{</span>
+			   <span class="kt">long</span> <span class="n">y</span>  <span class="o">=</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">n</span> <span class="o">:</span> <span class="o">-(</span><span class="kt">long</span><span class="o">)</span><span class="n">n</span><span class="o">;</span>
+			   
+			   <span class="kt">double</span> <span class="n">result</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
+			   <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">%</span> <span class="n">z</span><span class="o">;</span>
+			   <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">%</span> <span class="n">z</span><span class="o">;</span>
+			   <span class="k">while</span> <span class="o">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+				   <span class="k">if</span> <span class="o">((</span><span class="n">y</span>  <span class="o">&amp;</span> <span class="mi">1</span><span class="o">)</span> <span class="o">==</span> <span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+					   <span class="n">result</span> <span class="o">=(</span> <span class="n">result</span> <span class="o">*</span> <span class="n">x</span><span class="o">)</span> <span class="o">%</span> <span class="n">z</span><span class="o">;</span>
+				   <span class="o">}</span>
+				   <span class="n">x</span> <span class="o">=</span> <span class="o">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="o">)</span> <span class="o">%</span><span class="n">z</span><span class="o">;</span>
+				   <span class="c1">// 舍弃掉最后一个二进制位</span>
+				   <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">&gt;&gt;</span><span class="mi">1</span><span class="o">;</span>
+			   <span class="o">}</span>
+			   
+			   <span class="k">return</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">?</span> <span class="n">result</span> <span class="o">:</span> <span class="o">(</span><span class="mi">1</span><span class="o">/</span><span class="n">result</span><span class="o">);</span>
+		    <span class="o">}</span>
+
+<span class="o">}</span>
+
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+:ET

@@ -1,0 +1,595 @@
+I"ZL<h3 id="runtime">RunTime</h3>
+<ul>
+  <li>
+    <p>Objective-C是一门动态性比较强的编程语言，跟C、C++等语言有着很大的不同</p>
+  </li>
+  <li>Objective-C的动态性是由Runtime API来支撑的</li>
+  <li>Runtime API提供的接口基本都是C语言的，源码由C\C++\汇编语言编写</li>
+</ul>
+
+<p>####isa详解</p>
+<ul>
+  <li>要想学习Runtime，首先要了解它底层的一些常用数据结构，比如isa指针</li>
+  <li>在arm64架构之前，isa就是一个普通的指针，存储着Class、Meta-Class对象的内存地址</li>
+  <li>从arm64架构开始，对isa进行了优化，变成了一个<strong>共用体（union</strong>）结构，还使用位域来存储更多的信息</li>
+  <li><img src="/media/15397837973721/15397841433100.jpg" alt="" />
+    <ul>
+      <li>整个isa指针一共64位, struct只是为了方便访问,可以没有, shiftcls : 33 代表占了33位</li>
+    </ul>
+  </li>
+  <li>isa详解 - 位域
+    <ul>
+      <li>nonpointer
+        <ul>
+          <li>0，代表普通的指针，存储着Class、Meta-Class对象的内存地址</li>
+          <li>1，代表优化过，使用位域存储更多的信息</li>
+        </ul>
+      </li>
+      <li>has_assoc
+:是否有设置过关联对象，<strong>如果没有，释放时会更快</strong> ,那是因为释放需要调用函数释放方法</li>
+      <li><img src="/media/15397837973721/15398720877632.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>has_cxx_dtor: 是否有C++的析构函数（.cxx_destruct），如果没有，释放时会更快
+    <ul>
+      <li>shiftcls: 存储着Class、Meta-Class对象的内存地址信息</li>
+      <li>magic: 用于在调试时分辨对象是否未完成初始化</li>
+      <li>weakly_referenced: <strong>是否有被弱引用指向过</strong>，如果没有，释放时会更快, <strong>只要曾今被指向过,就有,无论是否已经被释放</strong></li>
+      <li>deallocating: 对象是否正在释放</li>
+      <li>extra_rc:里面存储的值是引用计数器减1</li>
+      <li>has_sidetable_rc
+        <ul>
+          <li>引用计数器是否过大无法存储在isa中</li>
+          <li>如果为1，那么引用计数会存储在一个叫SideTable的类的属性中</li>
+        </ul>
+      </li>
+      <li><img src="/media/15397837973721/15398741191638.jpg" alt="" />
+        <ul>
+          <li>最后一位为底位</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="位域技术">位域技术</h4>
+<ul>
+  <li>掩码，一般用来按位与(&amp;)运算的, 三种写法:</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+</pre></td><td class="rouge-code"><pre>// &amp;可以用来取出特定的位, 把需要取得位数设为1,其余变为0
+// 注意: 需要把当前位数的后面设为0,才是实际上的值
+
+// 0100 0111  取出第三位
+//&amp;0000 0100
+//-------------
+// 0100 0100
+
+
+
+
+
+//#define MJTallMask 1 // 2^0
+//#define MJRichMask 2 // 2^1
+//#define MJHandsomeMask 4 // 2^2
+
+//#define MJTallMask 0b00000001
+//#define MJRichMask 0b00000010
+//#define MJHandsomeMask 0b00000100
+
+#define MJTallMask (1&lt;&lt;0) // 1 向左移动0位, 其余设为0
+#define MJRichMask (1&lt;&lt;1) // 1 向左移动1位
+#define MJHandsomeMask (1&lt;&lt;2 // 1 向左移动2位
+
+#define MJHandsomeMask (ob1111&lt;&lt;0 // 4位1 向左移动0位 ob0000 1111
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre>// 怎么转换为Bool类型
+- (BOOL)isTall
+{
+    return !!(_tallRichHansome &amp; MJTallMask);
+     // (_tallRichHansome &amp; MJTallMask) 要么没有值, 要么有值, ! 取反转化为Bool, 在取反还原
+}
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre></td><td class="rouge-code"><pre>- (void)setTall:(BOOL)tall
+{
+    if (tall) {
+        _tallRichHansome |= MJTallMask; // 设置值, |掩码
+    } else {
+        _tallRichHansome &amp;= ~MJTallMask; // 如果是0, 取反按位&amp;
+    }
+}
+
+// 0100 0101  设置第二位数为1
+//|0000 0010
+//-------------
+// 0100 0110
+
+// 0100 0101  设置第一位数为0  a
+//&amp;1111 1110                mask
+//-------------
+// 0100 0110                b
+
+&amp;特点是: b &lt;= mask
+
+
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre></td><td class="rouge-code"><pre>@interface MJPerson()
+{
+    // 位域,直接对位数进行计算, char在64为为1个字节,8位, 这里只占了3位
+    struct {
+        char tall : 1; // 1个位数
+        char rich : 1;
+        char handsome : 1;
+    } _tallRichHandsome;
+}
+@end
+
+@implementation MJPerson
+
+- (void)setTall:(BOOL)tall
+{
+    _tallRichHandsome.tall = tall;
+}
+
+- (BOOL)isTall
+{
+    return !!_tallRichHandsome.tall; // 如果不取反, 一个2进制为转化为8位
+    0x0000 0001 有可能被转换为 ox1111 11111 即为-1
+}
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>一个字节为什么最大为255(2^8 - 1)不是256, -1 为FF?</li>
+  <li>一个十六进制的字符等于4个二进制字节 16=2^4?</li>
+  <li>isa指针最后三位一定是000,因为掩码最后三位是000,所以地址一定是0或8开头(8 = ob1000)</li>
+  <li>
+    <p><img src="/media/15397837973721/15397873222883.jpg" alt="" /></p>
+  </li>
+  <li>位运算运用场景
+    <ul>
+      <li>kvo, autoresizing</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="rouge-code"><pre>    self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleTopMargin;
+
+    NSKeyValueObservingOptions options = NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld;
+
+    [self addObserver:self forKeyPath:@"age" options:options context:NULL];
+
+
+
+// | 类似于相加, &amp; 取值
+
+
+typedef enum {
+// 能运用位运算的要点是值要特殊, 位于二进制位
+    MJOptionsNone = 0,    // 0b0000
+    MJOptionsOne = 1&lt;&lt;0,   // 0b0001
+    MJOptionsTwo = 1&lt;&lt;1,   // 0b0010
+    MJOptionsThree = 1&lt;&lt;2, // 0b0100
+    MJOptionsFour = 1&lt;&lt;3   // 0b1000
+} MJOptions;
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>Class 的结构
+    <ul>
+      <li><img src="/media/15397837973721/15398716874222.jpg" alt="" /></li>
+      <li>&amp;上一个mask,说明bits还有很多内容</li>
+      <li>class_rw_t里面的methods、properties、protocols是二维数组，是可读可写的，包含了类的初始内容、分类的内容</li>
+      <li><img src="/media/15397837973721/15398717450137.jpg" alt="" /></li>
+      <li>class_ro_t里面的baseMethodList、baseProtocols、ivars、baseProperties是一维数组，是只读的，包含了类的初始内容</li>
+      <li><img src="/media/15397837973721/15398717628371.jpg" alt="" /></li>
+      <li>为什么设计method_array_t 为一个二位数组,是为了方便动态添加方法</li>
+      <li>其实现有class_ro_t, 后面在组装成class_rw_t</li>
+    </ul>
+  </li>
+  <li>method_t 结构
+    <ul>
+      <li><img src="/media/15397837973721/15398722808717.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>IMP: 代表函数地址,即为实现</li>
+  <li>types 采取的是Type Encoding
+技术</li>
+  <li><img src="/media/15397837973721/15398723633906.jpg" alt="" /></li>
+  <li>
+    <p><img src="/media/15397837973721/15398725007003.jpg" alt="" /></p>
+  </li>
+  <li>方法缓存
+    <ul>
+      <li>Class内部结构中有个方法缓存（cache_t），用散列表（哈希表）来缓存曾经调用过的方法，可以提高方法的查找速度, 优势就没必要逐层找方法</li>
+      <li><img src="/media/15397837973721/15398725979279.jpg" alt="" /></li>
+      <li>怎么找到bucket_t
+        <ul>
+          <li>存储的时候通过&amp; 上mask通过算法得到下标索引</li>
+          <li>取值的时候 &amp; 上mask 通过算法得到下标索引</li>
+          <li>
+            <p><img src="/media/15397837973721/15398731461350.jpg" alt="" /></p>
+          </li>
+          <li>哈希表的本质是f(key) -&gt; (算法: 比如求余) = 索引</li>
+          <li>如果存储的时候已经bucket_t已经有值(因为不同的值&amp;上一个不同的值, 是有可能相同的),索引 - 1(重新生成索引) 继续找, 找到为空为止,如果找到为0, 那么从数组mask - 1 继续找</li>
+          <li>如果需要扩容,那么把原先的清除掉,重新设置最新的mask(会稳定一些容量值阶段,比如20, 40 , 80)</li>
+          <li>这就是典型的空间换时间,因为数组内容有些一开始是空的(地址值不确定)</li>
+          <li>哈希Map取余</li>
+        </ul>
+      </li>
+      <li>找到bucket_t之后?
+        <ul>
+          <li>如果@selector相同, 直接返回IMP</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>objc_msgSend执行流程
+    <ul>
+      <li><strong>消息接收者(receive) == 消息发送者 == 方法调用者</strong></li>
+      <li>OC中的方法调用，其实都是转换为objc_msgSend函数的调用</li>
+      <li>objc_msgSend的执行流程可以分为3大阶段</li>
+      <li>消息发送</li>
+      <li>objc_msgSent函数采取的是汇编的形式,速度更快,性能更好</li>
+      <li>动态方法解析
+        <ul>
+          <li>加了动态方法之后,又回到消息发送流程(缓存-&gt;类方法中查找)</li>
+        </ul>
+      </li>
+      <li>消息转发
+        <ul>
+          <li>
+            <p>消息转发对于类方法也是有效的,大部分人认为无效,那是因为+for…来,实际上通过源码分析,是有的
+    - <img src="/media/15397837973721/15402966381336.jpg" alt="" /></p>
+          </li>
+          <li>
+            <p>其实返回Bool还是NO,都无所谓,在源码中,只做了打印,都会寻求消息发送流程</p>
+            <ul>
+              <li><img src="/media/15397837973721/15402965816469.jpg" alt="" /></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre>// 方法签名：返回值类型、参数类型
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)aSelector
+{
+    if (aSelector == @selector(test)) {
+        return [NSMethodSignature signatureWithObjCTypes:"v16@0:8"];
+    }
+    return [super methodSignatureForSelector:aSelector];
+}
+
+ NSInvocation封装了一个方法调用，包括：方法调用者、方法名、方法参数
+    anInvocation.target 方法调用者
+    anInvocation.selector 方法名
+    [anInvocation getArgument:NULL atIndex:0]
+- (void)forwardInvocation:(NSInvocation *)anInvocation
+{
+//    anInvocation.target = [[MJCat alloc] init];
+//    [anInvocation invoke];
+
+    [anInvocation invokeWithTarget:[[MJCat alloc] init]];
+}
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>@dynamic关键字
+    <ul>
+      <li>提醒编译器不要自动生成setter和getter的实现、不要自动生成成员变量</li>
+    </ul>
+  </li>
+  <li>@synthesize关键字
+    <ul>
+      <li>自动生成get,set方法,赋值成员变量,后面xcode升级,已经退出历史的舞台了</li>
+    </ul>
+  </li>
+  <li>super关键字
+    <ul>
+      <li>super调用，底层会转换为objc_msgSendSuper2函数的调用，接收2个参数
+        <ul>
+          <li>struct objc_super2
+            <ul>
+              <li><img src="/media/15397837973721/15402974285024.jpg" alt="" /></li>
+              <li>消息接收者仍然是子类对象</li>
+              <li>(当前类)从父类开始查找方法的实现</li>
+            </ul>
+          </li>
+          <li>SEL</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre>- (Class)class
+{
+    return object_getClass(self);
+}
+
+- (Class)superclass
+{
+    return class_getSuperclass(object_getClass(self));
+}
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>Runtime的应用
+    <ul>
+      <li>拦截找不到方法的奔溃,去处理</li>
+    </ul>
+  </li>
+  <li>isKindOfClass
+    <ul>
+      <li>是否为本类及其子类的类型</li>
+    </ul>
+  </li>
+  <li>isisMemberOfClass
+    <ul>
+      <li>是否为本类的类型</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre>   // 这句代码的方法调用者不管是哪个类（只要是NSObject体系下的），都返回YES
+        NSLog(@"%d", [NSObject isKindOfClass:[NSObject class]]); // 1
+   // 因为类方法在元类对象的方法列表寻找,找不到,根元类的isa指针会指向类对象的基类中
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>以下代码能不能执行成功？如果可以，打印结果是什么？
+    <ul>
+      <li><img src="/media/15397837973721/15402979279668.jpg" alt="" /></li>
+      <li>分析:
+        <ul>
+          <li><img src="/media/15397837973721/15402979647733.jpg" alt="" /></li>
+          <li>[MJPerson class] 首先是一个类对象, 类对象里面有是一个结构体,里面有isa指针和及其它变量,取出地址,cls其实就是iss指针,相当于取出isa指针,所以可以在本类中找到方法,可以编译</li>
+          <li>方法本质是函数, 在栈中分配局部变量,从高地址到低地址,super为为一个结构体,查找成员变量的方式,是往偏移一个isa指针往高地址查找变量.</li>
+          <li>
+            <p><img src="/media/15397837973721/15402989614670.jpg" alt="" /></p>
+          </li>
+          <li>所以打印为当前控制器的地址</li>
+        </ul>
+      </li>
+      <li><img src="/media/15397837973721/15402988872186.jpg" alt="" /></li>
+      <li>如果前面有值, 那么打印的将是test的地址</li>
+    </ul>
+  </li>
+  <li>学习ios底层知识的方法
+    <ul>
+      <li>通过转成.cpp文件</li>
+      <li>通过转成汇编代码
+        <ul>
+          <li><img src="/media/15397837973721/15407100254086.jpg" alt="" /></li>
+        </ul>
+      </li>
+      <li>通过llvm转成中间代码
+        <ul>
+          <li>OC -&gt; 中间代码（.ll） -&gt; 汇编、机器代码</li>
+          <li>clang -emit-llvm -S main.m</li>
+          <li><img src="/media/15397837973721/15407100961426.jpg" alt="" /></li>
+          <li>具体可以参考官方文档：https://llvm.org/docs/LangRef.html</li>
+        </ul>
+      </li>
+      <li>Runtime API01 – 类
+        <ul>
+          <li>注册一个类（要在类注册之前添加成员变量(注册之后,成员变量的结构已经确定下来,readonly)
+            <ul>
+              <li>void objc_registerClassPair(Class cls)</li>
+            </ul>
+          </li>
+          <li>动态添加成员变量（已经注册的类是不能动态添加成员变量的
+            <ul>
+              <li>BOOL class_addIvar(Class cls, const char * name, size_t size, uint8_t alignment, const char * types)</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>RunTime 的应用
+        <ul>
+          <li>查看私有成员变量
+            <ul>
+              <li><img src="/media/15397837973721/15407104249536.jpg" alt="" /></li>
+              <li>分析, 需要传一个id类型的参数,先把10转化为指针,然后再转化为id类型,基本数据类型不可强转id类型</li>
+            </ul>
+          </li>
+          <li>字典转模型
+            <ul>
+              <li>利用Runtime遍历所有的属性或者成员变量</li>
+              <li>利用KVC设值</li>
+              <li>需要注意的问题,如果有继承关系,嵌套关系,有关键字,有缺失的值等等</li>
+            </ul>
+          </li>
+          <li>替换方法实现
+            <ul>
+              <li>一般是交换系统的方法或是sdk的方法,自己的方法没有必要交互</li>
+              <li>比如友盟的方法</li>
+              <li>比如捕捉所有点击事件</li>
+              <li>利用转发解决奔溃的问题,其中遇到的一些问题
+                <ul>
+                  <li>有类簇的概念,要找到真实的类去交换方法
+                    <ul>
+                      <li><img src="/media/15397837973721/15407108583659.jpg" alt="" /></li>
+                    </ul>
+                  </li>
+                  <li>写分类的命名规范是要加前缀, 避免覆盖原来的方法</li>
+                  <li>交换方法之后会重新刷新缓存</li>
+                  <li>在load方法里面执行,因为只会执行依次,但是为了人为调用load方法,加上锁
+                    <ul>
+                      <li><img src="/media/15397837973721/15407109375064.jpg" alt="" /></li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="有趣的花边">有趣的花边</h4>
+<ul>
+  <li><img src="/media/15397837973721/15398719510990.jpg" alt="" /></li>
+  <li>.mm文件包含C++的文件, class 为一个关键字,不可做标识符</li>
+  <li>汇编里面,方法名字前面会加上一个_,真实的函数名为:_objc_msgSent_uncached
+    <ul>
+      <li><img src="/media/15397837973721/15402961232465.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>goto转到汇编层面
+    <ul>
+      <li><img src="/media/15397837973721/15402964411501.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>通过函数地址打印函数名称
+    <ul>
+      <li><img src="/media/15397837973721/15402964804996.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>每个方法都会传两个默认的局部变量,为self, cmd, 然而并没有保存到栈中,而是寄存器,效率更高
+    <ul>
+      <li><img src="/media/15397837973721/15402967847272.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>打印4组8字节的地址
+    <ul>
+      <li><img src="/media/15397837973721/15402968727964.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>OC代码通过LLVM转成C++代码, 只做参考,八九不离十</li>
+</ul>
+
+:ET

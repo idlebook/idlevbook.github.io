@@ -1,0 +1,360 @@
+I"�=<h3 id="ios组件化探索之路实践篇">iOS组件化探索之路(实践篇)</h3>
+<ul>
+  <li>上篇主要讲了组件化的一些基本概念和解决方案,然而没有实践的支撑并没有什么卵用,本篇以图文的形式详细讲解组件化的步骤以及探索过程中的各种解决方法的对比.</li>
+</ul>
+
+<h4 id="知识储备">知识储备</h4>
+<ul>
+  <li>组件化的基础是建立在cocoapods和git管理之上,但是并不需要很深入地了解才能进行组件化,本文对于必要的操作进行一个简单的介绍</li>
+  <li>git的相关操作
+    <ul>
+      <li>基本概念
+        <ul>
+          <li>工作区→ 与.git文件夹同级的其他文件夹或者子文件夹</li>
+          <li>版本控制库
+            <ul>
+              <li>暂缓区</li>
+              <li>分支</li>
+            </ul>
+          </li>
+          <li>切换分支→通过控制HEAD指针指向不同的分支,就可以切换*</li>
+          <li><strong> 操作原则: 所有新添加/删除/修改的文件 必须先添加到暂缓区,然后才能提交到HEAD指向的当前分支中</strong></li>
+        </ul>
+      </li>
+      <li>常用命令
+        <ul>
+          <li>初始化本地仓库→git init</li>
+          <li>查看文件状态→git status</li>
+          <li>添加文件到暂缓区→git add .</li>
+          <li>从暂缓区提交文件到本地代码仓库→git commit -m “注释”</li>
+          <li>打标签→git tag -a ‘标签’ -m “注释”</li>
+          <li>查看标签→git tag</li>
+          <li>删除标签→git tag -d ‘标签名称’</li>
+          <li>给本地仓库添加添加远程仓库关联地址→git remote add origin 远程仓库地址</li>
+          <li>上传本地代码到远程仓库→git push origin master</li>
+          <li>上传标签到远程仓库→git push –tags</li>
+          <li>从远程仓库删除标签→git push origin :标签</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>cocoapods相关操作
+    <ul>
+      <li><a href="http://www.jianshu.com/p/6d8604f0b94c">cocoapods的安装</a></li>
+      <li><a href="http://www.jianshu.com/p/44c894b69cf6">cocoapods的使用</a></li>
+      <li>cocoapods常见命令
+        <ul>
+          <li>查看第三方框架仓库源→pod repo</li>
+          <li>移除仓库源→pod repo remove master</li>
+          <li>添加仓库源→pod repo add master http://git.oschina.net/xxxx/Specs.git</li>
+          <li>初始化(下载服务器中所有第三方框架信息, 缓存到电脑本地)→pod setup</li>
+        </ul>
+      </li>
+      <li>cocoapods重要路径
+        <ul>
+          <li>索引缓存路径
+            <ul>
+              <li>~/Library/Caches/CocoaPods/</li>
+              <li>如果发现框架信息本地已经缓存, 但是就是无法搜索框架, 可以删除这个索引文件, 重新生成</li>
+            </ul>
+          </li>
+          <li>pod命令安装路径→/usr/local/bin</li>
+          <li>pod框架索引信息缓存路径→/Users/apple/.cocoapods/repos/master</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="组件化方案">组件化方案</h4>
+<h6 id="本地化私有库方案">本地化私有库方案</h6>
+<ul>
+  <li>本地私有库:就是创建一个仓库, 存储在本地, 在本地的其他工程中直接使用</li>
+  <li>组件划分-因为主骨架依赖 一些分类, 而这些分类在其他组件中也会使用, 所以此处采用”依赖下沉”的方式, 单独剥离出一个基础组件</li>
+  <li>步骤
+    <ul>
+      <li>
+        <p>1.拖入源代码文件,示例为Extension,这个为基础组件,并使用Git管理<img src="/media/14970551532767/Snip20170610_17.png" alt="Snip20170610_17" />
+<img src="/media/14970551532767/Snip20170610_14.png" alt="Snip20170610_14" /></p>
+      </li>
+      <li>2.创建仓库描述文件 pod spec create XXX</li>
+      <li>
+        <p>3.修改重要字段<img src="/media/14970551532767/Snip20170610_21.png" alt="Snip20170610_21" />
+<img src="/media/14970551532767/Snip20170610_19.png" alt="Snip20170610_19" />
+<img src="/media/14970551532767/Snip20170610_26.png" alt="Snip20170610_26" /></p>
+      </li>
+      <li>4.回到宿主工程,创建podfile文件,并安装pod组件<img src="/media/14970551532767/Snip20170610_23.png" alt="Snip20170610_23" />
+<img src="/media/14970551532767/Snip20170610_24.png" alt="Snip20170610_24" /><img src="/media/14970551532767/Snip20170610_25.png" alt="Snip20170610_25" /></li>
+    </ul>
+  </li>
+  <li>存在的问题
+    <ul>
+      <li>上面的例子展示了最基本的组件化,存在一些问题.
+        <ul>
+          <li>需要手动创建podspec文件</li>
+          <li>无法测试, 需要再次手动创建测试工程</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>解决方案
+    <ul>
+      <li>使用pod lib 命令创建pod库模板工程</li>
+      <li>步骤
+        <ul>
+          <li>
+            <p>pod lib create XXX<img src="/media/14970551532767/Snip20170610_34.png" alt="Snip20170610_34" />
+<img src="/media/14970551532767/Snip20170610_29.png" alt="Snip20170610_29" /><img src="/media/14970551532767/Snip20170610_33.png" alt="Snip20170610_33" /></p>
+          </li>
+          <li>
+            <p>拖入代码到 Classes文件夹, 并删除ReplaceMe.m<img src="/media/14970551532767/Snip20170610_30.png" alt="Snip20170610_30" /></p>
+          </li>
+          <li>
+            <p>测试工程安装pod组件进行测试<img src="/media/14970551532767/Snip20170610_32.png" alt="Snip20170610_32" /></p>
+          </li>
+          <li>
+            <p>在宿主工程中, 直接测试, 没有问题后, 直接由外界以本地库的形式使用</p>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h6 id="远程私有库方案">远程私有库方案</h6>
+<ul>
+  <li>本地私有库其实存在很多问题
+    <ul>
+      <li>需要主动指明路径,如果调整路径, 需要修改相关配置</li>
+      <li>版本升级不好维护</li>
+      <li>不好展开多人合作开发</li>
+      <li>所以产生了远程私有库</li>
+    </ul>
+  </li>
+  <li>使用远程私有库的方案
+    <ul>
+      <li>远程, 是为了多人合作开发</li>
+      <li>私有, 是为了只有团队内部人员可以下载</li>
+    </ul>
+  </li>
+  <li>步骤
+    <ol>
+      <li>私有Spec Repo创建
+        <ul>
+          <li>在托管平台创建一个远程私有仓库作为Spec仓库(本例为Coding)</li>
+          <li>本地关联远程私有仓库 pod repo add PMStormBase https://git.coding.net/idlebook/xxxxx.git</li>
+          <li>
+            <p><img src="/media/14970551532767/Snip20170610_41.png" alt="Snip20170610_41" /></p>
+          </li>
+          <li>查看Spec仓库数据源→pod repo<img src="/media/14970551532767/Snip20170610_40.png" alt="Snip20170610_40" /></li>
+        </ul>
+      </li>
+      <li>创建Pod的所需要的项目工程文件，并上传到远程私有仓库
+        <ul>
+          <li>在托管平台创建一个一个远程私有仓库作为组件仓库</li>
+          <li>创建仓库工程模板→ pod lib create XXXLib</li>
+          <li>添加需要的库文件到相应文件夹</li>
+          <li>
+            <p>测试无误后, 修改Spec重要字段<img src="/media/14970551532767/Snip20170610_42.png" alt="Snip20170610_42" /></p>
+          </li>
+          <li>
+            <p>本地验证podspec文件→pod lib lint<img src="/media/14970551532767/Snip20170610_45.png" alt="Snip20170610_45" /></p>
+          </li>
+          <li>提交代码并上传到远程仓库
+            <ul>
+              <li>关联远程库→git remote add origin https://git.coding.net/xxxxx/PMStormBase.git</li>
+              <li>
+                <p>提交到远程仓库→git push origin master(先保证有代码)<img src="/media/14970551532767/Snip20170610_44.png" alt="Snip20170610_44" /></p>
+              </li>
+              <li>打标签, 并提交到远程仓库→<strong>git tag -m “初始版本” -a “0.1.0”(这里的版本与spec里面的版本号一一对应)</strong></li>
+              <li>推送tag到远程仓库→git push –tags</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p>向私有的Spec Repo中提交podspec</p>
+
+        <ul>
+          <li>
+            <p>远程验证podspec文件→pod spec lint<img src="/media/14970551532767/Snip20170610_46.png" alt="Snip20170610_46" /></p>
+          </li>
+          <li>
+            <p>pod repo push PMStormBaseSpec PMStormBase.podspec<img src="/media/14970551532767/Snip20170610_53.png" alt="Snip20170610_53" /></p>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p>宿主工程使用pod库<img src="/media/14970551532767/Snip20170610_50.png" alt="Snip20170610_50" /></p>
+
+        <ul>
+          <li>pod search PMStormBase</li>
+          <li>如果检索不到, 可以先到私有索引库内, 看看是否存在私有库</li>
+          <li>如果存在还是检索不到, 则直接删除, 私有库索引文件,路径为: ~/Library/Caches/CocoaPods/</li>
+          <li>宿主工程profile文件的配置<img src="/media/14970551532767/Snip20170610_52.png" alt="Snip20170610_52" />
+<img src="/media/14970551532767/Snip20170610_51.png" alt="Snip20170610_51" /></li>
+        </ul>
+      </li>
+    </ol>
+  </li>
+  <li>远程私有库的升级维护
+    <ul>
+      <li>版本的规范,一般来说,版本为V1.2.3的格式,最后一位代表小版本的迭代(包括bug的修复、功能的迭代),中间一位的改变通常代表有一个完善的版本发布,第一位的改变通常代表重大版本的改变</li>
+      <li>每次版本的改变都需要重新升级提交到远程仓库,然后打Tag,再次推送给本地私有库.</li>
+      <li>其他地方使用,只需要→pod update –no-repo-update</li>
+    </ul>
+  </li>
+  <li>远程私有库依赖问题
+    <ul>
+      <li>扩充网络工具类
+        <ul>
+          <li>需要依赖Alamofire、Kingfisher</li>
+          <li>
+            <p>在关键字段加入<img src="/media/14970551532767/Snip20170610_55.png" alt="Snip20170610_55" /></p>
+          </li>
+          <li>升级使用的效果<img src="/media/14970551532767/Snip20170610_60.png" alt="Snip20170610_60" /><img src="/media/14970551532767/Snip20170610_62.png" alt="Snip20170610_62" /></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>远程私有库设计优化
+    <ul>
+      <li>
+        <p>一个功能复杂的组件,拆分为若干个小的组件,使得更加灵活,如AFN.<img src="/media/14970551532767/Snip20170610_63.png" alt="Snip20170610_63" /></p>
+      </li>
+      <li>在PMStormBase中,有Extentions类,有工具类,但有些项目只需要工具类,这就需要子类化的组件</li>
+      <li>
+        <p>修改spec关键字段<img src="/media/14970551532767/Snip20170610_64.png" alt="Snip20170610_64" /></p>
+      </li>
+      <li>验证、测试<img src="/media/14970551532767/Snip20170610_65.png" alt="Snip20170610_65" /><img src="/media/14970551532767/Snip20170610_67.png" alt="Snip20170610_67" /><img src="/media/14970551532767/Snip20170610_66.png" alt="Snip20170610_66" /></li>
+    </ul>
+  </li>
+  <li>资源加载问题
+    <ul>
+      <li>
+        <ol>
+          <li>xib加载问题
+            <ul>
+              <li>所有的代码中需要填写bundle的地方, 全部需要动态获取</li>
+            </ul>
+          </li>
+        </ol>
+      </li>
+      <li>2.图片资源存放问题
+        <ul>
+          <li>所有的图片资源存放在Assets</li>
+          <li>修改podspec文件<img src="/media/14970551532767/Snip20170611_70.png" alt="Snip20170611_70" /></li>
+        </ul>
+      </li>
+      <li>3.图片资源使用问题
+        <ul>
+          <li>在xib文件中,在图片名称前面添加组件主bundle</li>
+          <li>代码加载图片
+            <ul>
+              <li>
+                <ol>
+                  <li>获取当前的bundleName</li>
+                </ol>
+              </li>
+              <li>
+                <ol>
+                  <li>根据图片名称, 在bundle中检索图片路径</li>
+                </ol>
+              </li>
+              <li>
+                <ol>
+                  <li>通过imageWithContentOfFile获取图片</li>
+                </ol>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>组件API的统一披露
+    <ul>
+      <li>产生原因,组件内部提供服务很多, 但是如果他人使用, 无法确定有哪些API, 如何调用等</li>
+      <li>解决方案
+        <ul>
+          <li>统一披露API</li>
+          <li>参考原则
+    - 直接以普通方法的形式让外界调用即可
+    - 让外界以block的形式, 或者通知的形式传递数据到组件内部, 内部做相应处理</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>二进制化
+    <ul>
+      <li>解决问题
+        <ul>
+          <li>虽然使用了组件化, 但依然是源码, 如果工程庞大, 编译速度依然非常慢</li>
+          <li>所以, 可以直接把私有库打包成为一个库文件, 进行使用</li>
+        </ul>
+      </li>
+      <li><a href="http://www.jianshu.com/p/155a3cfb765e">静态库/动态库</a></li>
+    </ul>
+  </li>
+  <li>组件间的通讯
+    <ul>
+      <li>什么是组件间通讯?
+        <ul>
+          <li>比如现在有很多业务组件, 在另外一个组件内部需要调用另外一个组件中的服务, 或者打开另外一个组件中的控制器, 并传值</li>
+          <li>如果直接在另外一个组件导入了另外一个组件的头文件, 则产生了物理上的依赖关系</li>
+        </ul>
+      </li>
+      <li>MGJRoute方案
+        <ul>
+          <li>原理,通过url注册服务, 其他地方通过url, 获取服务,框架在维护一个url-block的表格</li>
+          <li>特点
+            <ul>
+              <li>
+                <ol>
+                  <li>每个业务组件, 都需要依赖这个框架</li>
+                </ol>
+              </li>
+              <li>
+                <ol>
+                  <li>url维护成本高</li>
+                </ol>
+              </li>
+              <li>
+                <ol>
+                  <li>可以在组件内部任何地方调用/注册服务, 没有必要统一组件接口服务</li>
+                </ol>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>target-action方案
+        <ul>
+          <li>原理
+    - 额外的维护一个中间件的分类扩展,通过运行时进行物理解耦
+    - 其他地方通过target-action;的方案进行交互</li>
+        </ul>
+      </li>
+      <li>特点
+        <ul>
+          <li>统一了组件api服务</li>
+          <li>组件与框架之间无依赖关系</li>
+          <li>需要额外维护中间件类扩展</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="参考资料">参考资料</h4>
+<ul>
+  <li><a href="http://limboy.me/tech/2016/03/10/mgj-components.html">limboy-蘑菇街组件化之路</a></li>
+  <li><a href="http://limboy.me/tech/2016/03/14/mgj-components-continued.html">limboy-蘑菇街组件化之路-续</a></li>
+  <li><a href="http://skyline75489.github.io/post/2016-3-16_ios_module_design.html">Skyline75489-浅析iOS应用组件化设计</a></li>
+  <li><a href="http://www.jianshu.com/p/afb9b52143d4">philon-iOS组件化思路-大神博客研读和思考</a></li>
+  <li><a href="http://www.jianshu.com/p/196f66d31543">philon-iOS组件化实践方案-LDBusMediator练就</a></li>
+  <li><a href="http://blog.cnbang.net/tech/3080/">bang-iOS组件化方案探索</a></li>
+  <li><a href="http://weibo.com/ttarticle/p/show?id=2309404032668823108689">携程移动端架构演进与优化之路</a></li>
+</ul>
+
+:ET

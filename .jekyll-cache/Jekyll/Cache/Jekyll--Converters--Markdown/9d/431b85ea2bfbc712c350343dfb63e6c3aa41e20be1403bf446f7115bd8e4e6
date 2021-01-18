@@ -1,0 +1,428 @@
+I"�5<h4 id="block的本质">block的本质</h4>
+<ul>
+  <li>block的数据结构
+    <ul>
+      <li><img src="/media/15377914436892/15377918585243.jpg" alt="" /></li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre>struct __main_block_desc_0 {
+    size_t reserved;
+    size_t Block_size;
+};
+
+struct __block_impl {
+    void *isa;
+    int Flags;
+    int Reserved;
+    void *FuncPtr;
+};
+struct __main_block_impl_0 {
+    struct __block_impl impl;
+    struct __main_block_desc_0* Desc;
+    int age;
+};
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>block本质上也是一个OC对象，它内部也有个isa指针,最终继承为NSObect,可以调用相关方法</li>
+  <li>block是封装了函数调用以及函数调用环境的OC对象
+    <ul>
+      <li>函数调用: 封装了函数执行体,返回了Funcptr指针</li>
+      <li>函数调用环境: 主要是捕捉变量的环境</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre>        int age = 20;
+        
+        void (^block)(int, int) =  ^(int a , int b){
+            NSLog(@"this is a block! -- %d", age);
+            NSLog(@"this is a block!");
+            NSLog(@"this is a block!");
+            NSLog(@"this is a block!");
+        };
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h4 id="block的变量捕获capture">block的变量捕获（capture）</h4>
+<ul>
+  <li>局部变量
+    <ul>
+      <li>auto: 自动变量，离开作用域就销毁.捕获, 值传递</li>
+      <li>static: 静态局部变量, 捕获, 指针传递</li>
+    </ul>
+  </li>
+  <li>全局变量: 不捕获, 直接访问</li>
+  <li>布局变量捕获那是因为局部变量有可能被销毁,所以要保存起来以便访问.主要点: 生命周期</li>
+  <li>block访问属性,是否捕获?
+    <ul>
+      <li>属性是属于当前类self,当前self为隐式参数, 为局部变量(函数的参数名),捕获.准确的说,捕获self,从而访问属性</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="block的类型">block的类型</h4>
+<ul>
+  <li>三种类型
+    <ul>
+      <li><strong>NSGlobalBlock</strong>: 没有访问auto变量, 相当于函数调用, 很少用</li>
+      <li>
+        <p><strong>NSStackBlock</strong>: 访问了auto变量</p>
+      </li>
+      <li><strong>NSMallocBlock</strong>: __NSStackBlock__调用了copy</li>
+      <li><img src="/media/15377914436892/15377932853987.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>每一种类型的block调用copy后的结果如下所示
+    <ul>
+      <li><img src="/media/15377914436892/15377925570880.jpg" alt="" /></li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="block的copy">block的copy</h4>
+<ul>
+  <li>在ARC环境下，编译器会根据情况自动将栈上的block复制到堆上，比如以下情况
+    <ul>
+      <li>block作为函数返回值时</li>
+      <li>将block赋值给__strong指针时</li>
+      <li>block作为Cocoa API中方法名含有usingBlock的方法参数时</li>
+      <li>block作为GCD API的方法参数时</li>
+      <li>ARC下block属性的建议写法
+        <ul>
+          <li>@property (strong, nonatomic) void (^block)(void);</li>
+          <li>@property (copy, nonatomic) void (^block)(void);</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>MRC, 分配到栈上的有可能Block被销毁,要进行copy操作
+    <ul>
+      <li>@property (copy, nonatomic) void (^block)(void);</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="对象类型的auto变量">对象类型的auto变量</h4>
+<ul>
+  <li>当block内部访问了对象类型的auto变量时
+    <ul>
+      <li>如果block是在栈上，将不会对auto变量产生强引用(自己在栈上,随时有可能被销毁)</li>
+      <li>如果block被拷贝到堆上,会调用block内部的copy函数—&gt; copy函数内部会调用_Block_object_assign函数
+        <ul>
+          <li><img src="/media/15377914436892/15378868978816.jpg" alt="" /></li>
+        </ul>
+      </li>
+      <li>_Block_object_assign函数会根据auto变量的修饰符（__strong、__weak、__unsafe_unretained）做出相应的操作，形成强引用（retain）或者弱引用</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre></td><td class="rouge-code"><pre>int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        
+        MJBlock block;
+        
+        {
+            MJPerson *person = [[MJPerson alloc] init];
+            person.age = 10;
+            
+
+            block = ^{
+                NSLog(@"---------%d", person.age);
+            };
+        }
+        
+        NSLog(@"------");
+    }
+    return 0;
+}
+
+// block里面有一个强指针引用Person * p, p 指向Person的内存空间,block销毁了,Person才会被销毁
+// 打印结果: ------10, -------, [Person dealloc]
+
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+</pre></td><td class="rouge-code"><pre>int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        MJBlock block;
+
+        {
+            MJPerson *person = [[MJPerson alloc] init];
+            person.age = 10;
+
+            __weak MJPerson *weakPerson = person;
+            block = ^{
+                NSLog(@"---------%d", weakPerson.age);
+            };
+        }
+
+        NSLog(@"------");
+return 0;
+}
+
+// 弱引用
+// 打印结果: -----10, [Person dealloc]
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<ul>
+  <li>如果block从堆上移除
+    <ul>
+      <li>会调用block内部的dispose函数</li>
+      <li>dispose函数内部会调用_Block_object_dispose函数</li>
+      <li>_Block_object_dispose函数会自动释放引用的auto变量（release）</li>
+    </ul>
+  </li>
+  <li><img src="/media/15377914436892/15378867636745.jpg" alt="" /></li>
+  <li>__weak问题解决
+    <ul>
+      <li>在使用clang转换OC为C++代码时，可能会遇到以下问题</li>
+      <li>cannot create __weak reference in file using manual reference(因为weak需要运行时支持)</li>
+      <li>解决方案：支持ARC、指定运行时系统版本，比如xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc -fobjc-arc -fobjc-runtime=ios-8.0.0 main.m</li>
+    </ul>
+  </li>
+  <li>命令行不能做CGD的测试,因为运行完了就直接挂了</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre>- (void)touchesBegan:(NSSet&lt;UITouch *&gt; *)touches withEvent:(UIEvent *)event {
+    MJPerson *p = [[MJPerson alloc] init];
+    
+    __weak MJPerson *weakP = p;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        NSLog(@"1-------%@", p);
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            NSLog(@"2-------%@", weakP);
+        });
+    });
+    
+    NSLog(@"touchesBegan:withEvent:");
+}
+
+// 理论上来说,1s后第一个block挂了,Person也就挂了,但是编译器会考虑到整体,3s后才会挂
+</pre></td></tr></tbody></table></code></pre></div></div>
+<h4 id="__block修饰符">__block修饰符</h4>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre>// 编译报错,那是因为局部变量的基本数据类型为值传递,在各自的函数调用栈,修改的也是内部的age,无法修改
+   int age = 10;
+        MJBlock block2 = ^{
+            age = 30;
+            NSLog(@"age is %d", age);
+        };
+</pre></td></tr></tbody></table></code></pre></div></div>
+<ul>
+  <li>__block可以用于解决block内部无法修改auto变量值的问题</li>
+  <li>__block不能修饰全局变量、静态变量（static）(都可以直接访问了,没必要修饰)</li>
+  <li>编译器会将__block变量包装成一个对象
+    <ul>
+      <li><img src="/media/15377914436892/15378874780421.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li><img src="/media/15377914436892/15378875253041.jpg" alt="" /></li>
+  <li>fording 指针指向对象本身,修改age的值其实是age-&gt;forwarding-&gt;age = 20</li>
+  <li><img src="/media/15377914436892/15394383890806.jpg" alt="" /></li>
+  <li>block内部的age与外面的age的地址值相同<strong>(为什么一个变量的地址值可以相同?)</strong>,其实访问的是block内部的age,是会因为普通开发者只是认为访问的只有外面的age,不知到里面的age,苹果为了对外屏蔽细节,就像kvo一样</li>
+</ul>
+
+<h3 id="__block-的内存管理">__block 的内存管理</h3>
+<ul>
+  <li>当block在栈上时，并不会对__block变量产生强引用</li>
+  <li>当block被copy到堆时
+    <ul>
+      <li>会调用block内部的copy函数</li>
+      <li>copy函数内部会调用_Block_object_assign函数</li>
+      <li>_Block_object_assign函数会对__block变量形成强引用（retain）</li>
+      <li><img src="/media/15377914436892/15394369199169.jpg" alt="" /></li>
+      <li><img src="/media/15377914436892/15394369358495.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>当block从堆中移除时
+    <ul>
+      <li>会调用block内部的dispose函数</li>
+      <li>dispose函数内部会调用_Block_object_dispose函数</li>
+      <li>_Block_object_dispose函数会自动释放引用的__block变量（release）</li>
+      <li><img src="/media/15377914436892/15394371121463.jpg" alt="" /></li>
+      <li><img src="/media/15377914436892/15394371229851.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>blcok的fording指针
+    <ul>
+      <li><img src="/media/15377914436892/15394371536475.jpg" alt="" /></li>
+      <li>这样设计的原因是无论是访问栈上的block还是堆上的block,都能访问到堆上,所以属性访问的是堆上的</li>
+    </ul>
+  </li>
+  <li>对象类型的auto变量、__block变量
+    <ul>
+      <li>当__block变量在栈上时，不会对指向的对象产生强引用</li>
+      <li>当__block变量被copy到堆时
+        <ul>
+          <li>会调用__block变量内部的copy函数</li>
+          <li>copy函数内部会调用_Block_object_assign函数</li>
+          <li>_Block_object_assign函数会根据所指向对象的修饰符（__strong、__weak、__unsafe_unretained）做出相应的操作，形成强引用（retain）或者弱引用<strong>（注意：这里仅限于ARC时会retain，MRC时不会retain）</strong></li>
+        </ul>
+      </li>
+      <li>如果__block变量从堆上移除
+        <ul>
+          <li>会调用__block变量内部的dispose函数</li>
+          <li>dispose函数内部会调用_Block_object_dispose函数</li>
+          <li>_Block_object_dispose函数会自动释放指向的对象（release）
+            <h3 id="循环引用">循环引用</h3>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>ARC情况下
+    <ul>
+      <li>
+        <p>用__weak、__unsafe_unretained解决<img src="/media/15377914436892/15394373924986.jpg" alt="" /></p>
+      </li>
+      <li>用__block解决<img src="/media/15377914436892/15394373688361.jpg" alt="" /></li>
+      <li><img src="/media/15377914436892/15394376799175.jpg" alt="" /></li>
+    </ul>
+  </li>
+  <li>
+    <p>MRC 情况下</p>
+
+    <ul>
+      <li>用__unsafe_unretained解决
+  <img src="/media/15377914436892/15394374580764.jpg" alt="" /></li>
+      <li>用__block解决
+  <img src="/media/15377914436892/15394374779569.jpg" alt="" />
+        <ul>
+          <li>并没有把block置为nil,原因是_Block_object_assign函数会根据所指向对象的修饰符（__strong、__weak、__unsafe_unretained）做出相应的操作，形成强引用（retain）或者弱引用<strong>（注意：这里仅限于ARC时会retain，MRC时不会</strong>,没有形成大环引用<img src="/media/15377914436892/15394377307427.jpg" alt="" /></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="有趣的花边">有趣的花边</h4>
+<ul>
+  <li>如果想知道变量在哪个段,可通过打印已知的段区.原理:每个段区的分隔还是很大的</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="rouge-code"><pre>int age = 10;
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        int a = 10;
+        
+        NSLog(@"数据段：age %p", &amp;age);
+        NSLog(@"栈：a %p", &amp;a);
+        NSLog(@"堆：obj %p", [[NSObject alloc] init]);
+        NSLog(@"数据段：class %p", [MJPerson class]);
+        
+        
+    }
+    return 0;
+}
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+:ET

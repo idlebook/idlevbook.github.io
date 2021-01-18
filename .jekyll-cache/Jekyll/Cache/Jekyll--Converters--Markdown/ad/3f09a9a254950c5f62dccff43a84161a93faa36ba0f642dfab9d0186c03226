@@ -1,0 +1,544 @@
+I"6�<h3 id="最大二叉树">最大二叉树</h3>
+
+<h4 id="描述">描述</h4>
+<p>给定一个不含重复元素的整数数组。一个以此数组构建的最大二叉树定义如下：
+二叉树的根是数组中的最大元素。
+左子树是通过数组中最大值左边部分构造出的最大二叉树。
+右子树是通过数组中最大值右边部分构造出的最大二叉树。
+通过给定的数组构建最大二叉树，并且输出这个树的根节点。</p>
+
+<p>示例 ：
+输入：[3,2,1,6,0,5]
+输出：返回下面这棵树的根节点：
+<img src="/media/15900465515141/15900485461154.jpg" alt="-w181" /></p>
+
+<p>提示：
+给定的数组的大小在 [1, 1000] 之间。</p>
+
+<p>来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/maximum-binary-tree
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。</p>
+
+<h4 id="思路">思路</h4>
+
+<ul>
+  <li>为什么采用递归</li>
+  <li>这是属于一分二, 二分三, 三分万物的类型, 一个子问题的解逐步扩大大整个问题的解</li>
+  <li>变种题目为什么用栈可以，单调栈
+    <ul>
+      <li>变种题目: 返回父节点在数组的索引</li>
+    </ul>
+  </li>
+  <li>本质上就是找数组中一个数左边比它第一大的数，右边比它第一个大的数。</li>
+  <li>根据规律，在首元素中，假设是1，右边第一个大的必然是它的父节点（假设是6），因为最大二叉树中，1必然是6的左子树。</li>
+  <li>在push和pop的时候因为单调递减的缘故的缘故，就已经确定了左边和右边第一个大的数。</li>
+  <li>题目的意思是构建最大二叉树并且返回根节点, 而非返回最大值</li>
+</ul>
+
+<h4 id="实现">实现</h4>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">_2_654_最大二叉树</span> <span class="o">{</span>
+       <span class="kd">public</span> <span class="nc">TreeNode</span> <span class="nf">constructMaximumBinaryTree</span><span class="o">(</span><span class="kt">int</span><span class="o">[]</span> <span class="n">nums</span><span class="o">)</span> <span class="o">{</span>
+           <span class="k">if</span> <span class="o">(</span><span class="n">nums</span>  <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">nums</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span><span class="mi">0</span> <span class="o">)</span> <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+           
+           <span class="k">return</span> <span class="nf">findRoot</span><span class="o">(</span><span class="n">nums</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">nums</span><span class="o">.</span><span class="na">length</span><span class="o">);</span>
+     
+         <span class="o">}</span>
+         
+         <span class="kd">private</span> <span class="nc">TreeNode</span> <span class="nf">findRoot</span><span class="o">(</span><span class="kt">int</span><span class="o">[]</span> <span class="n">nums</span><span class="o">,</span> <span class="kt">int</span> <span class="n">l</span><span class="o">,</span> <span class="kt">int</span> <span class="n">r</span><span class="o">)</span> <span class="o">{</span>
+             <span class="k">if</span> <span class="o">(</span><span class="n">r</span> <span class="o">==</span> <span class="n">l</span><span class="o">)</span> <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+             <span class="c1">// maxId 不一定从0开始啊, 肯定是从左边开始的</span>
+             <span class="kt">int</span> <span class="n">maxId</span> <span class="o">=</span> <span class="n">l</span><span class="o">;</span>
+             
+             <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">r</span><span class="o">;</span> <span class="n">i</span> <span class="o">++)</span> <span class="o">{</span>
+                 <span class="k">if</span> <span class="o">(</span><span class="n">nums</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">&gt;</span> <span class="n">nums</span><span class="o">[</span><span class="n">maxId</span><span class="o">])</span> <span class="o">{</span>
+                     <span class="n">maxId</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span>
+                 <span class="o">}</span>
+             <span class="o">}</span>
+             
+             <span class="nc">TreeNode</span> <span class="n">root</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="n">nums</span><span class="o">[</span><span class="n">maxId</span><span class="o">]);</span>
+             
+             <span class="n">root</span><span class="o">.</span><span class="na">left</span> <span class="o">=</span> <span class="n">findRoot</span><span class="o">(</span><span class="n">nums</span><span class="o">,</span> <span class="n">l</span><span class="o">,</span><span class="n">maxId</span><span class="o">);</span>
+             <span class="n">root</span><span class="o">.</span><span class="na">right</span> <span class="o">=</span> <span class="n">findRoot</span><span class="o">(</span><span class="n">nums</span><span class="o">,</span> <span class="n">maxId</span> <span class="o">+</span> <span class="mi">1</span><span class="o">,</span><span class="n">r</span><span class="o">);</span>
+             
+             <span class="k">return</span> <span class="n">root</span><span class="o">;</span>
+     <span class="o">}</span>
+
+         <span class="cm">/**
+         * 找出[l, r)范围的根节点
+         */</span>
+
+         
+         <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="nf">parentIndexes</span><span class="o">(</span><span class="kt">int</span><span class="o">[]</span> <span class="n">nums</span><span class="o">)</span> <span class="o">{</span>
+             <span class="k">if</span><span class="o">(</span><span class="n">nums</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">nums</span><span class="o">.</span><span class="na">length</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                 <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+             <span class="o">}</span>
+             
+             <span class="nc">Stack</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;</span> <span class="n">stack</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Stack</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;();</span>
+             
+           <span class="kt">int</span><span class="o">[]</span> <span class="n">lis</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">nums</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+           
+           <span class="kt">int</span><span class="o">[]</span> <span class="n">ris</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">nums</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+           
+           <span class="c1">// 初始话</span>
+           <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nums</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+                <span class="n">lis</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+                <span class="n">ris</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+           <span class="o">}</span>
+           
+           <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nums</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+                <span class="k">while</span> <span class="o">(!</span><span class="n">stack</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">()</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">&gt;</span> <span class="n">nums</span><span class="o">[</span><span class="n">stack</span><span class="o">.</span><span class="na">peek</span><span class="o">()]</span> <span class="o">)</span> <span class="o">{</span>
+                    <span class="c1">// 单调递减栈, 要pop, 必然是右边的数比较大</span>
+                    <span class="n">ris</span><span class="o">[</span><span class="n">stack</span><span class="o">.</span><span class="na">peek</span><span class="o">()]</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span>
+                    <span class="n">stack</span><span class="o">.</span><span class="na">pop</span><span class="o">();</span>
+                    
+                <span class="o">}</span>
+                
+                <span class="k">if</span> <span class="o">(!</span><span class="n">stack</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="o">{</span>
+                    <span class="c1">// 我能push进来, 必然比左边的数要大</span>
+                    <span class="n">lis</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="na">peek</span><span class="o">();</span>
+                <span class="o">}</span>
+                
+                <span class="n">stack</span><span class="o">.</span><span class="na">push</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+           <span class="o">}</span>
+           
+           <span class="c1">// 因为数组存储是-1, 且是所以, 对特殊情况做判断</span>
+           
+           <span class="kt">int</span><span class="o">[]</span> <span class="n">pics</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">nums</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+           
+           <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nums</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span> <span class="o">++)</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">ris</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">lis</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// 根节点</span>
+                    <span class="n">pics</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+                <span class="o">}</span><span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">ris</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// 说明数组最后以一个元素</span>
+                   <span class="n">pics</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">lis</span><span class="o">[</span><span class="n">i</span><span class="o">];</span>
+                <span class="o">}</span><span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">lis</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// 第一个元素</span>
+                       <span class="n">pics</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">ris</span><span class="o">[</span><span class="n">i</span><span class="o">];</span>
+                <span class="o">}</span><span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">nums</span><span class="o">[</span><span class="n">ris</span><span class="o">[</span><span class="n">i</span><span class="o">]]</span> <span class="o">&gt;</span> <span class="n">nums</span><span class="o">[</span><span class="n">lis</span><span class="o">[</span><span class="n">i</span><span class="o">]])</span> <span class="o">{</span>
+                       <span class="n">pics</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">lis</span><span class="o">[</span><span class="n">i</span><span class="o">];</span>
+                <span class="o">}</span><span class="k">else</span> <span class="o">{</span>
+                       <span class="n">pics</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">ris</span><span class="o">[</span><span class="n">i</span><span class="o">];</span>
+                <span class="o">}</span>
+           <span class="o">}</span>
+             
+             <span class="k">return</span> <span class="n">pics</span><span class="o">;</span>
+             
+         <span class="o">}</span>
+         
+         <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+             <span class="n">_2_654_最大二叉树</span> <span class="n">o</span> <span class="o">=</span> <span class="k">new</span> <span class="n">_2_654_最大二叉树</span><span class="o">();</span>
+             <span class="kt">int</span><span class="o">[]</span> <span class="n">nums</span> <span class="o">=</span> <span class="o">{</span> <span class="mi">3</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">6</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">5</span> <span class="o">};</span>
+             <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="nc">Arrays</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">o</span><span class="o">.</span><span class="na">parentIndexes</span><span class="o">(</span><span class="n">nums</span><span class="o">)));</span>
+         <span class="o">}</span>
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h3 id="查找最近公共祖先">查找最近公共祖先</h3>
+<h4 id="描述-1">描述</h4>
+<p>给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。
+百度百科中最近公共祖先的定义为：“对于有根树 T 的两个结点 p、q，最近公共祖先表示为一个结点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（一个节点也可以是它自己的祖先）。”
+例如，给定如下二叉树:  root = [3,5,1,6,2,0,8,null,null,7,4]</p>
+
+<p><img src="/media/15900444091514/15900444680271.jpg" alt="-w204" /></p>
+
+<p>示例 1:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
+输出: 3
+解释: 节点 5 和节点 1 的最近公共祖先是节点 3。
+示例 2:
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4
+输出: 5
+解释: 节点 5 和节点 4 的最近公共祖先是节点 5。因为根据定义最近公共祖先节点可以为节点本身。</p>
+
+<p>说明:
+所有节点的值都是唯一的。
+p、q 为不同节点且均存在于给定的二叉树中。
+来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。</p>
+
+<h4 id="思路-1">思路</h4>
+<ul>
+  <li>二叉树的问题大部分可以通过递归+ 遍历解决</li>
+  <li>定义好递归式的方法说明, 有几种情况要考虑
+    <ul>
+      <li>能在左子树找到公共祖先</li>
+    </ul>
+  </li>
+  <li>能在右子树找到公共祖先</li>
+  <li>P Q 节点各在一边, 返回根节点</li>
+  <li>⚠️(说明已经给了,存在该二叉树) P Q 在左右子树找不到,返回null.</li>
+  <li>逻辑运算的优化.</li>
+  <li>如果不在左子树那么就在右子树, 否则绝对是根节点.</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">_10_236_查找最近公共祖先</span> <span class="o">{</span>
+     
+    <span class="kd">public</span> <span class="nc">TreeNode</span> <span class="nf">lowestCommonAncestor</span><span class="o">(</span><span class="nc">TreeNode</span> <span class="n">root</span><span class="o">,</span> <span class="nc">TreeNode</span> <span class="n">p</span><span class="o">,</span> <span class="nc">TreeNode</span> <span class="n">q</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">p</span> <span class="o">==</span> <span class="n">root</span> <span class="o">||</span> <span class="n">q</span> <span class="o">==</span> <span class="n">root</span><span class="o">)</span> <span class="k">return</span> <span class="n">root</span><span class="o">;</span>
+        
+        <span class="c1">// 从左子树找</span>
+        <span class="nc">TreeNode</span> <span class="n">left</span> <span class="o">=</span> <span class="n">lowestCommonAncestor</span><span class="o">(</span><span class="n">root</span><span class="o">.</span><span class="na">left</span><span class="o">,</span> <span class="n">p</span><span class="o">,</span> <span class="n">q</span><span class="o">);</span>
+        <span class="c1">// 从右子树找</span>
+        <span class="nc">TreeNode</span> <span class="n">right</span> <span class="o">=</span> <span class="n">lowestCommonAncestor</span><span class="o">(</span><span class="n">root</span><span class="o">.</span><span class="na">right</span><span class="o">,</span> <span class="n">p</span><span class="o">,</span> <span class="n">q</span><span class="o">);</span>
+        
+        <span class="c1">// 在左子树</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">left</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span><span class="k">return</span> <span class="n">right</span><span class="o">;}</span>
+        <span class="c1">// 在右子树</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">right</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span><span class="k">return</span> <span class="n">left</span><span class="o">;}</span>
+        
+   
+        <span class="k">return</span> <span class="n">root</span><span class="o">;</span>
+        
+
+    <span class="o">}</span>
+    
+    
+
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h3 id="另一个树的子树">另一个树的子树</h3>
+<h3 id="描述-2">描述</h3>
+<p>给定两个非空二叉树 s 和 t，检验 s 中是否包含和 t 具有相同结构和节点值的子树。s 的一个子树包括 s 的一个节点和这个节点的所有子孙。s 也可以看做它自身的一棵子树。
+<img src="/media/15900465515142/15900486662305.jpg" alt="-w509" /></p>
+
+<p>来源：力扣（LeetCode）
+链接：https://leetcode-cn.com/problems/subtree-of-another-tree
+著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。</p>
+
+<h4 id="思路-2">思路</h4>
+<ul>
+  <li>关于树, 肯定要遍历, 这题可以将树序列化, 因为可以转化为子串的问题</li>
+  <li>如果不序列化, 遍历之后要一个个比较, 很繁琐</li>
+  <li>遍历有前中后驱, 还有层序. 因为判断子树, 肯定是父子节点的遍历, 而不是兄弟节点的遍历, 所以采用前中后驱遍历即可</li>
+  <li>序列化!代表一个节点的结束, #代表空节点, 是为了构建唯一的一个二叉树</li>
+  <li>前序遍历的一个坑是在第一个节点加上特殊符号, 避免出现是子串不是子树的问题, 只有一个节点, B是A其中的一个数</li>
+  <li>这一题我我们理所当然的认为412是4120的子串, 实际序列化过程中我们包含了空节点的值, 判断子串而不是子串的子串</li>
+</ul>
+
+<h4 id="实现-1">实现</h4>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+</pre></td><td class="rouge-code"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">_572_另一个树的子树</span> <span class="o">{</span>
+     
+
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isSubtree</span><span class="o">(</span><span class="nc">TreeNode</span> <span class="n">s</span><span class="o">,</span> <span class="nc">TreeNode</span> <span class="n">t</span><span class="o">)</span> <span class="o">{</span>
+         <span class="k">if</span> <span class="o">(</span><span class="n">s</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">t</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+         
+         <span class="k">return</span> <span class="nf">preSerialize</span><span class="o">(</span><span class="n">s</span><span class="o">).</span><span class="na">contains</span><span class="o">(</span><span class="n">preSerialize</span><span class="o">(</span><span class="n">t</span><span class="o">));</span>
+         
+    <span class="o">}</span>
+    <span class="c1">// 前序遍历</span>
+    <span class="kd">private</span> <span class="nc">String</span>  <span class="nf">preSerialize</span><span class="o">(</span><span class="nc">TreeNode</span> <span class="n">root</span><span class="o">)</span> <span class="o">{</span>
+         <span class="nc">StringBuilder</span> <span class="n">sb</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">StringBuilder</span><span class="o">(</span><span class="s">"!"</span><span class="o">);</span>
+        <span class="n">preSerialize</span><span class="o">(</span><span class="n">root</span><span class="o">,</span> <span class="n">sb</span><span class="o">);</span>
+        
+        <span class="k">return</span> <span class="n">sb</span><span class="o">.</span><span class="na">toString</span><span class="o">();</span>
+        
+         
+     <span class="o">}</span>
+
+     <span class="kd">private</span> <span class="kt">void</span> <span class="nf">preSerialize</span><span class="o">(</span><span class="nc">TreeNode</span> <span class="n">node</span><span class="o">,</span> <span class="nc">StringBuilder</span> <span class="n">sb</span><span class="o">)</span> <span class="o">{</span>
+         <span class="c1">// TODO Auto-generated method stub</span>
+         <span class="n">sb</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">val</span><span class="o">).</span><span class="na">append</span><span class="o">(</span><span class="s">"!"</span><span class="o">);</span>
+
+         <span class="k">if</span> <span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">left</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+             <span class="n">sb</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"#!"</span><span class="o">);</span>
+         <span class="o">}</span><span class="k">else</span> <span class="o">{</span>
+             <span class="n">preSerialize</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">left</span><span class="o">,</span> <span class="n">sb</span><span class="o">);</span>
+         <span class="o">}</span>
+         
+         <span class="k">if</span> <span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">right</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+             <span class="n">sb</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">"#!"</span><span class="o">);</span>
+         <span class="o">}</span><span class="k">else</span> <span class="o">{</span>
+             <span class="n">preSerialize</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">right</span><span class="o">,</span> <span class="n">sb</span><span class="o">);</span>
+         <span class="o">}</span>
+         
+         
+         
+     <span class="o">}</span>
+     
+
+     
+     
+     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+         <span class="nc">TreeNode</span> <span class="n">root</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="mi">3</span><span class="o">);</span>
+         <span class="n">root</span><span class="o">.</span><span class="na">right</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="mi">5</span><span class="o">);</span>
+         <span class="n">root</span><span class="o">.</span><span class="na">left</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="mi">4</span><span class="o">);</span>
+         <span class="n">root</span><span class="o">.</span><span class="na">left</span><span class="o">.</span><span class="na">left</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+         <span class="n">root</span><span class="o">.</span><span class="na">left</span><span class="o">.</span><span class="na">right</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>
+         <span class="n">root</span><span class="o">.</span><span class="na">left</span><span class="o">.</span><span class="na">right</span><span class="o">.</span><span class="na">left</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+
+         <span class="nc">BinaryTrees</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="k">new</span> <span class="nc">BinaryTreeInfo</span><span class="o">()</span> <span class="o">{</span>
+             <span class="nd">@Override</span>
+             <span class="kd">public</span> <span class="nc">Object</span> <span class="nf">string</span><span class="o">(</span><span class="nc">Object</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+                 <span class="k">return</span> <span class="o">((</span><span class="nc">TreeNode</span><span class="o">)</span> <span class="n">node</span><span class="o">).</span><span class="na">val</span><span class="o">;</span>
+             <span class="o">}</span>
+             
+             <span class="nd">@Override</span>
+             <span class="kd">public</span> <span class="nc">Object</span> <span class="nf">root</span><span class="o">()</span> <span class="o">{</span>
+                 <span class="k">return</span> <span class="n">root</span><span class="o">;</span>
+             <span class="o">}</span>
+             
+             <span class="nd">@Override</span>
+             <span class="kd">public</span> <span class="nc">Object</span> <span class="nf">right</span><span class="o">(</span><span class="nc">Object</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+                 <span class="k">return</span> <span class="o">((</span><span class="nc">TreeNode</span><span class="o">)</span> <span class="n">node</span><span class="o">).</span><span class="na">right</span><span class="o">;</span>
+             <span class="o">}</span>
+             
+             <span class="nd">@Override</span>
+             <span class="kd">public</span> <span class="nc">Object</span> <span class="nf">left</span><span class="o">(</span><span class="nc">Object</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+                 <span class="k">return</span> <span class="o">((</span><span class="nc">TreeNode</span><span class="o">)</span> <span class="n">node</span><span class="o">).</span><span class="na">left</span><span class="o">;</span>
+             <span class="o">}</span>
+         <span class="o">});</span>
+         
+         <span class="nc">TreeNode</span> <span class="n">root2</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="mi">4</span><span class="o">);</span>
+         <span class="n">root2</span><span class="o">.</span><span class="na">left</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="mi">1</span><span class="o">);</span>
+         <span class="n">root2</span><span class="o">.</span><span class="na">right</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">TreeNode</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>
+         <span class="nc">BinaryTrees</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="k">new</span> <span class="nc">BinaryTreeInfo</span><span class="o">()</span> <span class="o">{</span>
+             <span class="nd">@Override</span>
+             <span class="kd">public</span> <span class="nc">Object</span> <span class="nf">string</span><span class="o">(</span><span class="nc">Object</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+                 <span class="k">return</span> <span class="o">((</span><span class="nc">TreeNode</span><span class="o">)</span> <span class="n">node</span><span class="o">).</span><span class="na">val</span><span class="o">;</span>
+             <span class="o">}</span>
+             
+             <span class="nd">@Override</span>
+             <span class="kd">public</span> <span class="nc">Object</span> <span class="nf">root</span><span class="o">()</span> <span class="o">{</span>
+                 <span class="k">return</span> <span class="n">root2</span><span class="o">;</span>
+             <span class="o">}</span>
+             
+             <span class="nd">@Override</span>
+             <span class="kd">public</span> <span class="nc">Object</span> <span class="nf">right</span><span class="o">(</span><span class="nc">Object</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+                 <span class="k">return</span> <span class="o">((</span><span class="nc">TreeNode</span><span class="o">)</span> <span class="n">node</span><span class="o">).</span><span class="na">right</span><span class="o">;</span>
+             <span class="o">}</span>
+             
+             <span class="nd">@Override</span>
+             <span class="kd">public</span> <span class="nc">Object</span> <span class="nf">left</span><span class="o">(</span><span class="nc">Object</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+                 <span class="k">return</span> <span class="o">((</span><span class="nc">TreeNode</span><span class="o">)</span> <span class="n">node</span><span class="o">).</span><span class="na">left</span><span class="o">;</span>
+             <span class="o">}</span>
+         <span class="o">});</span>
+         
+         <span class="n">_572_另一个树的子树</span> <span class="n">o</span> <span class="o">=</span> <span class="k">new</span> <span class="n">_572_另一个树的子树</span><span class="o">();</span>
+         <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">o</span><span class="o">.</span><span class="na">preSerialize</span><span class="o">(</span><span class="n">root</span><span class="o">));</span>
+         <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">o</span><span class="o">.</span><span class="na">preSerialize</span><span class="o">(</span><span class="n">root2</span><span class="o">));</span>
+     <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+:ET

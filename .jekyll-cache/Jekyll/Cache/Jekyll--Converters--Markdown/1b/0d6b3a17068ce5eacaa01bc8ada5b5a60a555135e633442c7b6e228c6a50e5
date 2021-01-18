@@ -1,0 +1,11 @@
+I"�<h3 id="mac命令行科学上网">Mac命令行科学上网</h3>
+<ul>
+  <li>因为终端只支持socks5代理,不像科学上网走http通道</li>
+  <li>所以,基础配置好了科学上网工具,开启了全局模式,依旧没有在命令行生效</li>
+  <li>这样,对于码农来讲,wget、curl、git、brew等命令行工具都会变得很慢。</li>
+  <li>解决方式是socks代理转http通道.</li>
+  <li>因为苹果在新系统中加入了SIP安全机制，他会阻止第三方程序向系统目录内（/System，/bin，/sbin，/usr(除了/usr/local)）进行写操作，sudo也不行。办法是先把SIP关了，等装好软件配置好后再打开SIP。或者改用其他软件,proxychains-NG等软件就不太好搞了</li>
+  <li>第一种工具是使用ClashX, 自带终端命令代理工具</li>
+  <li>第二种用的是privoxy,它刚好就是安装在/usr/local内，不需要关闭SIP也可以正常使用。</li>
+</ul>
+:ET
