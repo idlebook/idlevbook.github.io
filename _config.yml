@@ -9,7 +9,7 @@
 # --------------------------
 title: Chirpy                          # the main title
 
-tagline: A text-focused Jekyll theme   # it will display as the sub-title
+tagline: 但行好事,莫问前程   # it will display as the sub-title
 
 description: >-                        # used by seo meta and the atom feed
   A minimal, portfolio, sidebar,
@@ -146,10 +146,10 @@ defaults:
     values:
       breadcrumb:
         -
-          label: Home
+          label: 首页
           url: /
         -
-          label: Tags
+          label: 标签
           url: /tabs/tags/
   -
     scope:
