@@ -1,0 +1,211 @@
+<!DOCTYPE html><html lang="en" ><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><meta name="theme" content="Chirpy v2.7.2"><meta name="generator" content="Jekyll v4.2.0" /><meta property="og:title" content="密码学的一些探索之消息认证码" /><meta name="author" content="idlebook" /><meta property="og:locale" content="en_US" /><meta name="description" content="嗨，我是添书，一名 iOS 开发者,目前暂居深圳。" /><meta property="og:description" content="嗨，我是添书，一名 iOS 开发者,目前暂居深圳。" /><link rel="canonical" href="https://idlebook.github.io/posts/18/" /><meta property="og:url" content="https://idlebook.github.io/posts/18/" /><meta property="og:site_name" content="idlebook" /><meta property="og:type" content="article" /><meta property="article:published_time" content="2019-07-26T00:00:00+08:00" /><meta name="twitter:card" content="summary" /><meta property="twitter:title" content="密码学的一些探索之消息认证码" /><meta name="twitter:site" content="@twitter_username" /><meta name="twitter:creator" content="@idlebook" /><meta name="google-site-verification" content="google_meta_tag_verification" /> <script type="application/ld+json"> {"description":"嗨，我是添书，一名 iOS 开发者,目前暂居深圳。","url":"https://idlebook.github.io/posts/18/","@type":"BlogPosting","headline":"密码学的一些探索之消息认证码","dateModified":"2019-07-26T00:00:00+08:00","datePublished":"2019-07-26T00:00:00+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://idlebook.github.io/posts/18/"},"author":{"@type":"Person","name":"idlebook"},"@context":"https://schema.org"}</script><title>密码学的一些探索之消息认证码 | idlebook</title><link rel="shortcut icon" href="/assets/img/favicons/favicon.ico" type="image/x-icon"><link rel="icon" href="/assets/img/favicons/favicon.ico" type="image/x-icon"><link rel="apple-touch-icon" href="/assets/img/favicons/apple-icon.png"><link rel="apple-touch-icon" href="/assets/img/favicons/apple-icon-precomposed.png"><link rel="apple-touch-icon" sizes="57x57" href="/assets/img/favicons/apple-icon-57x57.png"><link rel="apple-touch-icon" sizes="60x60" href="/assets/img/favicons/apple-icon-60x60.png"><link rel="apple-touch-icon" sizes="72x72" href="/assets/img/favicons/apple-icon-72x72.png"><link rel="apple-touch-icon" sizes="76x76" href="/assets/img/favicons/apple-icon-76x76.png"><link rel="apple-touch-icon" sizes="114x114" href="/assets/img/favicons/apple-icon-114x114.png"><link rel="apple-touch-icon" sizes="120x120" href="/assets/img/favicons/apple-icon-120x120.png"><link rel="apple-touch-icon" sizes="144x144" href="/assets/img/favicons/apple-icon-144x144.png"><link rel="apple-touch-icon" sizes="152x152" href="/assets/img/favicons/apple-icon-152x152.png"><link rel="apple-touch-icon" sizes="180x180" href="/assets/img/favicons/apple-icon-180x180.png"><link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicons/android-icon-192x192.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicons/favicon-32x32.png"><link rel="icon" type="image/png" sizes="96x96" href="/assets/img/favicons/favicon-96x96.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicons/favicon-16x16.png"><link rel="manifest" href="/assets/img/favicons/manifest.json"><meta name='msapplication-config' content='/assets/img/favicons/browserconfig.xml'><meta name="msapplication-TileColor" content="#ffffff"><meta name="msapplication-TileImage" content="/assets/img/favicons/ms-icon-144x144.png"><meta name="theme-color" content="#ffffff"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"><link rel="dns-prefetch" href="https://fonts.gstatic.com"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin="use-credentials"><link rel="dns-prefetch" href="https://www.google-analytics.com"><link rel="preconnect" href="https://www.googletagmanager.com" crossorigin="anonymous"><link rel="dns-prefetch" href="https://www.googletagmanager.com"><link rel="preconnect" href="cdn.jsdelivr.net"><link rel="dns-prefetch" href="cdn.jsdelivr.net"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha256-LA89z+k9fjgMKQ/kq4OO2Mrf8VltYml/VES+Rg0fh20=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.11.2/css/all.min.css" integrity="sha256-+N4/V/SbAFiW1MPBCXnfnP9QSN3+Keu+NlB+0ev/YKQ=" crossorigin="anonymous"><link rel="preload" href="/assets/css/post.css" as="style"><link rel="stylesheet" href="/assets/css/post.css"><link rel="preload" as="style" href="/assets/css/lib/bootstrap-toc.min.css"><link rel="stylesheet" href="/assets/css/lib/bootstrap-toc.min.css" /> <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script> <script defer src="https://cdn.jsdelivr.net/combine/npm/popper.js@1.15.0,npm/bootstrap@4/dist/js/bootstrap.min.js"></script> <script async src="/assets/js/post.min.js"></script> <script defer src="/app.js"></script> <script defer src="https://www.googletagmanager.com/gtag/js?id="></script> <script> document.addEventListener("DOMContentLoaded", function(event) { window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', ''); }); </script><body data-spy="scroll" data-target="#toc"><div id="sidebar" class="d-flex flex-column align-items-end"><div class="profile-wrapper text-center"><div id="avatar"> <a href="/" alt="avatar" class="mx-auto"> <img src="/media/avatar.jpg" alt="avatar" onerror="this.style.display='none'"> </a></div><div class="site-title mt-3"> <a href="/">idlebook</a></div><div class="site-subtitle font-italic">但行好事,莫问前程</div></div><ul class="w-100"><li class="nav-item"> <a href="/" class="nav-link"> <i class="fa-fw fas fa-home ml-xl-3 mr-xl-3 unloaded"></i> <span>HOME</span> </a><li class="nav-item"> <a href="/tabs/categories/" class="nav-link"> <i class="fa-fw fas fa-stream ml-xl-3 mr-xl-3 unloaded"></i> <span>分类</span> </a><li class="nav-item"> <a href="/tabs/tags/" class="nav-link"> <i class="fa-fw fas fa-tags ml-xl-3 mr-xl-3 unloaded"></i> <span>标签</span> </a><li class="nav-item"> <a href="/tabs/archives/" class="nav-link"> <i class="fa-fw fas fa-archive ml-xl-3 mr-xl-3 unloaded"></i> <span>归档</span> </a><li class="nav-item"> <a href="/tabs/about/" class="nav-link"> <i class="fa-fw fas fa-info ml-xl-3 mr-xl-3 unloaded"></i> <span>关于</span> </a></ul><div class="sidebar-bottom mt-auto d-flex flex-wrap justify-content-center"> <a href="https://github.com/github_username" aria-label="github" class="order-3" target="_blank" rel="noopener"> <i class="fab fa-github-alt"></i> </a> <a href="https://twitter.com/twitter_username" aria-label="twitter" class="order-4" target="_blank" rel="noopener"> <i class="fab fa-twitter"></i> </a> <a href=" javascript:location.href = 'mailto:' + ['example','doamin.com'].join('@')" aria-label="email" class="order-5" > <i class="fas fa-envelope"></i> </a> <a href="/feed.xml" aria-label="rss" class="order-6" > <i class="fas fa-rss"></i> </a> <span class="icon-border order-2"></span> <span id="mode-toggle-wrapper" class="order-1"> <i class="mode-toggle fas fa-adjust"></i> <script type="text/javascript"> class ModeToggle { static get MODE_KEY() { return "mode"; } static get DARK_MODE() { return "dark"; } static get LIGHT_MODE() { return "light"; } constructor() { if (this.hasMode) { if (this.isDarkMode) { if (!this.isSysDarkPrefer) { this.setDark(); } } else { if (this.isSysDarkPrefer) { this.setLight(); } } } var self = this; /* always follow the system prefers */ this.sysDarkPrefers.addListener(function() { if (self.hasMode) { if (self.isDarkMode) { if (!self.isSysDarkPrefer) { self.setDark(); } } else { if (self.isSysDarkPrefer) { self.setLight(); } } self.clearMode(); } self.updateMermaid(); }); } /* constructor() */ setDark() { $('html').attr(ModeToggle.MODE_KEY, ModeToggle.DARK_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.DARK_MODE); } setLight() { $('html').attr(ModeToggle.MODE_KEY, ModeToggle.LIGHT_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.LIGHT_MODE); } clearMode() { $('html').removeAttr(ModeToggle.MODE_KEY); sessionStorage.removeItem(ModeToggle.MODE_KEY); } get sysDarkPrefers() { return window.matchMedia("(prefers-color-scheme: dark)"); } get isSysDarkPrefer() { return this.sysDarkPrefers.matches; } get isDarkMode() { return this.mode == ModeToggle.DARK_MODE; } get isLightMode() { return this.mode == ModeToggle.LIGHT_MODE; } get hasMode() { return this.mode != null; } get mode() { return sessionStorage.getItem(ModeToggle.MODE_KEY); } /* get the current mode on screen */ get modeStatus() { if (this.isDarkMode || (!this.hasMode && this.isSysDarkPrefer) ) { return ModeToggle.DARK_MODE; } else { return ModeToggle.LIGHT_MODE; } } updateMermaid() { if (typeof mermaid !== "undefined") { let expectedTheme = (this.modeStatus === ModeToggle.DARK_MODE? "dark" : "default"); let config = { theme: expectedTheme }; /* re-render the SVG › <https://github.com/mermaid-js/mermaid/issues/311#issuecomment-332557344> */ $(".mermaid").each(function() { let svgCode = $(this).prev().children().html(); $(this).removeAttr("data-processed"); $(this).html(svgCode); }); mermaid.initialize(config); mermaid.init(undefined, ".mermaid"); } } flipMode() { if (this.hasMode) { if (this.isSysDarkPrefer) { if (this.isLightMode) { this.clearMode(); } else { this.setLight(); } } else { if (this.isDarkMode) { this.clearMode(); } else { this.setDark(); } } } else { if (this.isSysDarkPrefer) { this.setLight(); } else { this.setDark(); } } this.updateMermaid(); } /* flipMode() */ } /* ModeToggle */ let toggle = new ModeToggle(); $(".mode-toggle").click(function() { toggle.flipMode(); }); </script> </span></div></div><div id="topbar-wrapper" class="row justify-content-center topbar-down"><div id="topbar" class="col-11 d-flex h-100 align-items-center justify-content-between"> <span id="breadcrumb"> <span> <a href="/"> 主页 </a> </span> <span>密码学的一些探索之消息认证码</span> </span> <i id="sidebar-trigger" class="fas fa-bars fa-fw"></i><div id="topbar-title"> Post</div><i id="search-trigger" class="fas fa-search fa-fw"></i> <span id="search-wrapper" class="align-items-center"> <i class="fas fa-search fa-fw"></i> <input class="form-control" id="search-input" type="search" aria-label="search" placeholder="Search..."> <i class="fa fa-times-circle fa-fw" id="search-cleaner"></i> </span> <span id="search-cancel" >Cancel</span></div></div><div id="main-wrapper"><div id="main"><div class="row"><div id="post-wrapper" class="col-12 col-lg-11 col-xl-8"><div class="post pl-1 pr-1 pl-sm-2 pr-sm-2 pl-md-4 pr-md-4"><h1 data-toc-skip>密码学的一些探索之消息认证码</h1><div class="post-meta text-muted d-flex flex-column"><div> <span class="timeago " data-toggle="tooltip" data-placement="bottom" title="Fri, Jul 26, 2019, 12:00 AM +0800" > Jul 26, 2019 <i class="unloaded">2019-07-26T00:00:00+08:00</i> </span> by <span class="author"> idlebook </span></div><div> <span class="readtime" data-toggle="tooltip" data-placement="bottom" title="3407 words">18 min</span></div></div><div class="post-content"><p align="center"> <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://img.halfrost.com/Blog/ArticleImage/103_0.png" /></p><h2 id="一为什么需要消息认证码">一、为什么需要消息认证码？</h2><p>还是举一个银行汇钱的例子：A 向 B 汇钱 100 万元。如果攻击者从中攻击，篡改这条消息，就可能变成 A 向攻击者汇钱 1000 万元。这里针对汇款消息，需要注意两个问题：消息的 “完整性” 和 “认证” 。</p><p>消息的完整性，就叫消息的一致性，这个可以用上一篇文章中讲的消息指纹来判断，通过对比单向散列函数的 hash 值来判断这条消息的完整性，有没有被篡改。</p><p>消息的认证，指的是，消息是否来自正确的发送者。如果确认汇款请求确实来自 A，就相当于对消息进行了认证，代表消息没有被伪装。</p><p><strong>如果同时需要识别出篡改和伪装，即要确认消息的完整性，又要对消息进行认证，这种情况下就需要消息认证码</strong>。</p><h2 id="二什么是消息认证码">二、什么是消息认证码？</h2><p><strong>消息认证码</strong>(Message Authentication Code) 是一种确认完整性并进行认证的技术，简称 MAC。</p><p>使用消息认证码可以确认自己收到的消息是否就是发送者的本意，也就是说可以判断消息是否被篡改，是否有人伪装成发送者发送了这条消息。</p><blockquote><p>消息认证码也是密码学家工具箱中的 6 大工具之一：对称密码、公钥密码、单向散列函数、消息认证码、数字签名和伪随机数生成器。</p></blockquote><p>消息认证码的输入包括任意长度的<strong>消息</strong>和一个发送者与接收者之间的<strong>共享密钥</strong>。输出固定长度的数据，输出的数据就是 MAC 值。</p><p align="center"> <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://img.halfrost.com/Blog/ArticleImage/103_1.png" /></p><p>消息认证码和单向散列函数的区别就在有没有这个<strong>共享密钥</strong>上了。所以消息认证码就是利用共享密钥进行认证的。消息认证码和单向散列函数的散列值一样，如果消息发生了 1 比特的变化，MAC 值也会发生变化。所以消息认证码正是用这个性质来进行完整性的。</p><p>所以消息认证码可以理解为<strong>消息认证码是一种与密钥相关联的单向散列函数</strong>。</p><h2 id="三消息认证码的使用步骤">三、消息认证码的使用步骤</h2><p>如果银行之间汇款采用消息认证码，流程会如下：</p><p align="center"> <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://img.halfrost.com/Blog/ArticleImage/103_2_.png" /></p><p>大体流程和验证单向散列函数基本一致，只不过消息认证码需要共享密钥来解出 MAC 值。</p><p>不过消息认证码的共享密钥存在密钥配送问题。密钥在配送中不能被窃听者窃取。解决密钥配送问题需要用到上上篇文章中讲的公钥密码、Diffie-Hellman 密钥交换等其他安全的方式配送密钥。</p><h2 id="四消息认证码使用现状">四、消息认证码使用现状</h2><ul><li><p>SWIFT（Society for Worldwide Interbank Financial Telecommunications—环球同业银行金融电讯协会) 是一个目的为国际银行间的交易保驾护航的协会。银行和银行间通过 SWIFT 来传递交易消息，SWIFT 会利用消息认证码校验消息的完整性和对消息的验证。消息认证码的共享密钥是由人进行配送的。</p><li><p>IPsec 是对 IP 协议增加安全性的一种方式，在 IPsec 中，对消息的认证和完整性校验也是用消息认证码的方式。</p><li><p>SSL/TLS 对通信内容的认证和完整性校验也用了消息认证码。</p></ul><h2 id="五消息认证码的实现方式">五、消息认证码的实现方式</h2><p align="center"> <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://img.halfrost.com/Blog/ArticleImage/103_6.png" /></p><ul><li><p>使用 SHA-2 之类的单向散列函数可以实现消息认证码，例如 HMAC。</p><li><p>使用 AES 之类的分组密码可以实现消息认证码。分组密码的密钥作为共享密钥，利用 CBC 模式将消息全部加密。由于消息认证码中不需要解密，所以可以只留下最后一个分组，其他分组全部丢弃。CBC 模式的最后一个分组会受到整个消息以及密钥的双重影响，所以它可以作为 MAC 值。AES-CMAC (RFC4493) 就是一种基于 AES 来实现的消息认证码。</p><li><p>流密码</p><li><p>公钥密码</p></ul><p>2000 年以后，人们基于认证的研究更加进一步，产生了<strong>认证加密</strong> (AE：Authenticated Encryption，AEAD：Authenticated Encryption with Associated Data)。认证加密是一种将对称密码和消息认证相结合的技术，同时满足加密性，完整性和认证性三大功能。</p><p>认证加密有几种，这里举例：例如 Encrypt-then-MAC，先用对称密码将明文加密，然后计算密文的 MAC 值。Encrypt-and-MAC，将明文用对称密码加密，并对明文计算 MAC 值。MAC-then-Encrypt，先计算明文的 MAC 值，然后将明文和 MAC 值同时用对称密码加密。<strong>在 HTTPS 中，一般使用 MAC-then-Encrypt 这种模式进行处理</strong>。</p><p>GCM(Galois/Counter Mode)是一种认证加密方式。GCM 中使用 AES 等 128 位比特分组密码的 CTR 模式，并使用一个反复进行加法和乘法运算的散列函数来计算 MAC 值。CTR 模式加密与 MAC 值的计算使用的是相同密钥，所以密钥管理很方便。专门用于消息认证码的 GCM 成为 GMAC。<strong>GCM 和 CCM (CBC Counter Mode) 都是被推荐的认证加密方式</strong>。</p><blockquote><p>ChaCha20-Poly1305 是谷歌发明的一种算法，使用 ChaCha20 流密码进行加密运算，使用 Poly1305 算法进行 MAC 运算。</p></blockquote><h2 id="六hmac-算法">六、HMAC 算法</h2><p>HMAC 是一种使用单向散列函数来构造消息认证码的方法，HMAC 中的 H 是 Hash 的意思。官方文档见 <a href="https://tools.ietf.org/html/rfc2104">RFC 2104</a></p><p>任何高强度的单向散列函数都可以被用于 HMAC 中，例如 SHA-1、SHA-224、SHA-256、SHA-384、SHA-512 所构造的 HMAC，分别称为 HMAC-SHA1、HMAC-SHA-224、HMAC-SHA-256、HMAC-SHA-384、HMAC-SHA-512。</p><p>HMAC 计算 MAC 值步骤如下：</p><p align="center"> <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://img.halfrost.com/Blog/ArticleImage/103_3__.png" /></p><h3 id="1-密钥填充">1. 密钥填充</h3><p>如果密钥比单向散列函数的分组长度要短，就需要在末尾填充 0，使最终长度和单向散列函数分组长度一样。</p><p>如果密钥比分组长度要长，则要用单向散列函数求出密钥的散列值，然后把这个散列值作为 HMAC 的密钥。</p><h3 id="2-密钥变换-i">2. 密钥变换 I</h3><p>将填充后的密钥和 ipad 的比特序列进行 XOR 计算。ipad 是 00110110 (16进制的 36)不断循环直到长度和分组长度一样长的比特序列。ipad 的 i 是 inner 内部的意思。</p><p>XOR 得到的最终结果是一个<strong>和单向散列函数的分组长度相同，且和密钥相关的比特序列</strong>。这个序列称为 ipadkey。</p><h3 id="3-与消息组合">3. 与消息组合</h3><p>把 ipadkey 附加在消息的开头。</p><h3 id="4-计算散列值">4. 计算散列值</h3><p>把第 3 步的结果输入单向散列函数，计算出散列值。</p><h3 id="5-密钥变换-ii">5. 密钥变换 II</h3><p>将填充后的密钥和 opad 的比特序列进行 XOR 计算。opad 是 01011100 (16进制的 5C)不断循环直到长度和分组长度一样长的比特序列。opad 的 o 是 outer 外部的意思。</p><p>XOR 得到的最终结果是一个<strong>和单向散列函数的分组长度相同，且和密钥相关的比特序列</strong>。这个序列称为 opadkey。</p><h3 id="6-与散列值组合">6. 与散列值组合</h3><p>把 opadkey 附加在散列值的开头。</p><h3 id="7-计算散列值">7. 计算散列值</h3><p>把第 6 步的结果输入单向散列函数，计算出散列值。这个散列值即为最终 MAC 值。</p><p>最终的 MAC 值一定是一个和输入消息以及密钥都相关的长度固定的比特序列。</p><p>HMAC 如果用伪代码表示：</p><div class="language-c highlighter-rouge"><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre><td class="rouge-code"><pre><span class="n">HMAC</span> <span class="o">=</span> <span class="n">hash</span><span class="p">(</span><span class="n">opadkey</span> <span class="o">||</span> <span class="n">hash</span><span class="p">(</span><span class="n">ipadkey</span> <span class="o">||</span> <span class="n">message</span><span class="p">))</span>
+	 <span class="o">=</span> <span class="n">hash</span><span class="p">(</span> <span class="p">(</span><span class="n">key</span> <span class="err">⊕</span> <span class="n">opad</span><span class="p">)</span> <span class="o">||</span> <span class="n">hash</span><span class="p">(</span> <span class="p">(</span><span class="n">key</span> <span class="err">⊕</span> <span class="n">ipad</span><span class="p">)</span> <span class="o">||</span> <span class="n">message</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="n">opadkey</span> <span class="o">=</span> <span class="n">key</span> <span class="err">⊕</span> <span class="n">opad</span>
+<span class="n">ipadkey</span> <span class="o">=</span> <span class="n">key</span> <span class="err">⊕</span> <span class="n">ipad</span>
+
+<span class="n">key</span> <span class="err">为密钥，</span><span class="n">message</span> <span class="err">为消息，</span><span class="n">hash</span> <span class="err">计算为</span> <span class="n">hash</span><span class="p">()</span><span class="err">，</span><span class="n">A</span> <span class="o">||</span> <span class="n">B</span> <span class="err">代表</span> <span class="n">A</span> <span class="err">放在</span> <span class="n">B</span> <span class="err">的前面</span>
+</pre></table></code></div></div><p>具体举一个 HMAC_MD5 的例子：</p><div class="language-c highlighter-rouge"><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+</pre><td class="rouge-code"><pre><span class="cm">/*
+** Function: hmac_md5
+*/</span>
+
+<span class="kt">void</span> <span class="n">hmac_md5</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">text_len</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">key_len</span><span class="p">,</span> <span class="n">digest</span><span class="p">)</span>
+<span class="kt">unsigned</span> <span class="kt">char</span><span class="o">*</span>  <span class="n">text</span><span class="p">;</span>                <span class="cm">/* pointer to data stream */</span>
+<span class="kt">int</span>             <span class="n">text_len</span><span class="p">;</span>            <span class="cm">/* length of data stream */</span>
+<span class="kt">unsigned</span> <span class="kt">char</span><span class="o">*</span>  <span class="n">key</span><span class="p">;</span>                 <span class="cm">/* pointer to authentication key */</span>
+<span class="kt">int</span>             <span class="n">key_len</span><span class="p">;</span>             <span class="cm">/* length of authentication key */</span>
+<span class="n">caddr_t</span>         <span class="n">digest</span><span class="p">;</span>              <span class="cm">/* caller digest to be filled in */</span>
+
+<span class="p">{</span>
+        <span class="n">MD5_CTX</span> <span class="n">context</span><span class="p">;</span>
+        <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">k_ipad</span><span class="p">[</span><span class="mi">65</span><span class="p">];</span>    <span class="cm">/* inner padding -
+                                      * key XORd with ipad
+                                      */</span>
+        <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">k_opad</span><span class="p">[</span><span class="mi">65</span><span class="p">];</span>    <span class="cm">/* outer padding -
+                                      * key XORd with opad
+                                      */</span>
+        <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">tk</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
+        <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+        <span class="cm">/* if key is longer than 64 bytes reset it to key=MD5(key) */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">key_len</span> <span class="o">&gt;</span> <span class="mi">64</span><span class="p">)</span> <span class="p">{</span>
+
+                <span class="n">MD5_CTX</span>      <span class="n">tctx</span><span class="p">;</span>
+
+                <span class="n">MD5Init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tctx</span><span class="p">);</span>
+                <span class="n">MD5Update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tctx</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">key_len</span><span class="p">);</span>
+                <span class="n">MD5Final</span><span class="p">(</span><span class="n">tk</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">tctx</span><span class="p">);</span>
+
+                <span class="n">key</span> <span class="o">=</span> <span class="n">tk</span><span class="p">;</span>
+                <span class="n">key_len</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="cm">/*
+         * the HMAC_MD5 transform looks like:
+         *
+         * MD5(K XOR opad, MD5(K XOR ipad, text))
+         *
+         * where K is an n byte key
+         * ipad is the byte 0x36 repeated 64 times
+         * opad is the byte 0x5c repeated 64 times
+         * and text is the data being protected
+         */</span>
+
+        <span class="cm">/* start out by storing key in pads */</span>
+        <span class="n">bzero</span><span class="p">(</span> <span class="n">k_ipad</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">k_ipad</span><span class="p">);</span>
+        <span class="n">bzero</span><span class="p">(</span> <span class="n">k_opad</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">k_opad</span><span class="p">);</span>
+        <span class="n">bcopy</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">k_ipad</span><span class="p">,</span> <span class="n">key_len</span><span class="p">);</span>
+        <span class="n">bcopy</span><span class="p">(</span> <span class="n">key</span><span class="p">,</span> <span class="n">k_opad</span><span class="p">,</span> <span class="n">key_len</span><span class="p">);</span>
+
+        <span class="cm">/* XOR key with ipad and opad values */</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="mi">64</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">k_ipad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^=</span> <span class="mh">0x36</span><span class="p">;</span>
+                <span class="n">k_opad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^=</span> <span class="mh">0x5c</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="cm">/*
+         * perform inner MD5
+         */</span>
+        <span class="n">MD5Init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">context</span><span class="p">);</span>                   <span class="cm">/* init context for 1st
+                                              * pass */</span>
+        <span class="n">MD5Update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">context</span><span class="p">,</span> <span class="n">k_ipad</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>      <span class="cm">/* start with inner pad */</span>
+        <span class="n">MD5Update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">context</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">text_len</span><span class="p">);</span> <span class="cm">/* then text of datagram */</span>
+        <span class="n">MD5Final</span><span class="p">(</span><span class="n">digest</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">context</span><span class="p">);</span>          <span class="cm">/* finish up 1st pass */</span>
+        <span class="cm">/*
+         * perform outer MD5
+         */</span>
+        <span class="n">MD5Init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">context</span><span class="p">);</span>                   <span class="cm">/* init context for 2nd
+                                              * pass */</span>
+        <span class="n">MD5Update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">context</span><span class="p">,</span> <span class="n">k_opad</span><span class="p">,</span> <span class="mi">64</span><span class="p">);</span>     <span class="cm">/* start with outer pad */</span>
+        <span class="n">MD5Update</span><span class="p">(</span><span class="o">&amp;</span><span class="n">context</span><span class="p">,</span> <span class="n">digest</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>     <span class="cm">/* then results of 1st
+                                              * hash */</span>
+        <span class="n">MD5Final</span><span class="p">(</span><span class="n">digest</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">context</span><span class="p">);</span>          <span class="cm">/* finish up 2nd pass */</span>
+<span class="p">}</span>
+
+</pre></table></code></div></div><p>输出</p><div class="language-c highlighter-rouge"><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre><td class="rouge-code"><pre>  <span class="n">key</span> <span class="o">=</span>         <span class="mh">0x0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b</span>
+  <span class="n">key_len</span> <span class="o">=</span>     <span class="mi">16</span> <span class="n">bytes</span>
+  <span class="n">data</span> <span class="o">=</span>        <span class="s">"Hi There"</span>
+  <span class="n">data_len</span> <span class="o">=</span>    <span class="mi">8</span>  <span class="n">bytes</span>
+  <span class="n">digest</span> <span class="o">=</span>      <span class="mh">0x9294727a3638bb1c13f48ef8158bfc9d</span>
+  
+  
+  <span class="n">key</span> <span class="o">=</span>         <span class="s">"Jefe"</span>
+  <span class="n">data</span> <span class="o">=</span>        <span class="s">"what do ya want for nothing?"</span>
+  <span class="n">data_len</span> <span class="o">=</span>    <span class="mi">28</span> <span class="n">bytes</span>
+  <span class="n">digest</span> <span class="o">=</span>      <span class="mh">0x750c783e6ab0b503eaa86e310a5db738</span>
+  
+  
+  <span class="n">key</span> <span class="o">=</span>         <span class="mh">0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</span>
+  <span class="n">key_len</span>       <span class="mi">16</span> <span class="n">bytes</span>
+  <span class="n">data</span> <span class="o">=</span>        <span class="mh">0xDDDDDDDDDDDDDDDDDDDD</span><span class="p">...</span>
+                <span class="p">..</span><span class="n">DDDDDDDDDDDDDDDDDDDD</span><span class="p">...</span>
+                <span class="p">..</span><span class="n">DDDDDDDDDDDDDDDDDDDD</span><span class="p">...</span>
+                <span class="p">..</span><span class="n">DDDDDDDDDDDDDDDDDDDD</span><span class="p">...</span>
+                <span class="p">..</span><span class="n">DDDDDDDDDDDDDDDDDDDD</span>
+  <span class="n">data_len</span> <span class="o">=</span>    <span class="mi">50</span> <span class="n">bytes</span>
+  <span class="n">digest</span> <span class="o">=</span>      <span class="mh">0x56be34521d144c88dbb8c733f0e8b3f6</span>
+
+</pre></table></code></div></div><h2 id="七对消息认证码的攻击">七、对消息认证码的攻击</h2><p align="center"> <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://img.halfrost.com/Blog/ArticleImage/103_5.png" /></p><h3 id="1-重放攻击">1. 重放攻击</h3><p align="center"> <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://img.halfrost.com/Blog/ArticleImage/103_4_.png" /></p><p>窃听者不直接破解消息认证码，而是把它保存起来，反复利用，这种攻击就叫做<strong>重放攻击(replay attack)</strong>。</p><p>防止重放攻击可以有 3 种方法：</p><ul><li><p>序号<br /> 每条消息都增加一个递增的序号，并且在计算 MAC 值的时候把序号也包含在消息中。这样攻击者如果不破解消息认证码就无法计算出正确的 MAC 值。这个方法的弊端是每条消息都需要多记录最后一个消息的序号。</p><li><p>时间戳<br /> 发送消息的时候包含当前时间，如果收到的时间与当前的不符，即便 MAC 值正确也认为是错误消息直接丢弃。这样也可以防御重放攻击。这个方法的弊端是，发送方和接收方的时钟必须一致，考虑到消息的延迟，所以需要在时间上留下一定的缓冲余地。这个缓冲之间还是会造成重放攻击的可趁之机。</p><li><p>nonce<br /> 在通信之前，接收者先向发送者发送一个一次性的随机数 nonce。发送者在消息中包含这个 nonce 并计算 MAC 值。由于每次 nonce 都会变化，因此无法进行重放攻击。这个方法的缺点会导致通信的数据量增加。</p></ul><h3 id="2-密钥推测攻击">2. 密钥推测攻击</h3><p>消息认证码同样可以暴力破解以及生日攻击。消息认证码必须要保证不能通过 MAC 值推测出通信双方所使用的密钥。这一点可以通过单向散列函数的单向性和抗碰撞性来保证无法推测出密钥。</p><h2 id="八消息认证码无法解决的问题">八、消息认证码无法解决的问题</h2><p>消息认证码虽然可以证明双方发送的消息是一致的，没有篡改，也不存在中间人伪装。但是它无法 “对第三方证明” 和 “防止抵赖”。</p><p>无法 “对第三方证明” 原因是因为消息认证码中用到的密钥是共享密钥，通信双方都有这个密钥，所以对第三方无法证明消息到底出自双方中的哪一方。<br /> 解决 “第三方证明” 的问题需要用到数字签名。</p><p>无法 “防止抵赖” 原因是也是因为消息认证码的共享密钥双方都有，无法判断消息是发自于哪一方。所以消息认证码无法防止否认(nonrepudiation)。<br /> 解决 “防止抵赖” 的问题需要用到数字签名。</p><h2 id="九总结">九、总结</h2><p align="center"> <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-src="https://img.halfrost.com/Blog/ArticleImage/102_2.png" /></p><p>单向散列函数保证消息的一致性，完整性，没有被篡改。<br /> 消息认证码保证消息的一致性，完整性，没有被篡改，并且不存在中间人伪装。<br /> 数字签名保证消息的一致性，完整性，没有被篡改，并且不存在中间人伪装，并且能防止抵赖。</p><hr /><p>Reference：</p><p>《图解密码技术》</p><blockquote><p>GitHub Repo：<a href="HTTPS://github.com/halfrost/Halfrost-Field">Halfrost-Field</a></p><p>Follow: <a href="HTTPS://github.com/halfrost">halfrost · GitHub</a></p><p>Source: <a href="https://halfrost.com/message_authentication_code/">https://halfrost.com/message_authentication_code/</a></p></blockquote></div><div class="post-tail-wrapper text-muted"><div class="post-tags"> <i class="fa fa-tags fa-fw mr-1"></i> <a href="/tags/%E8%83%BD%E5%B7%A5%E5%B7%A7%E5%8C%A0%E9%9B%86/" class="post-tag no-text-decoration" >能工巧匠集</a></div><div class="post-tail-bottom d-flex justify-content-between align-items-center mt-3 pt-5 pb-2"><div class="license-wrapper"> This post is licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> by the author.</div><div class="share-wrapper"> <span class="share-label text-muted mr-1">Share</span> <span class="share-icons"> <a href="https://twitter.com/intent/tweet?text=密码学的一些探索之消息认证码 - idlebook&url=https://idlebook.github.io/posts/18/" data-toggle="tooltip" data-placement="top" title="Twitter" target="_blank" rel="noopener" aria-label="Twitter"> <i class="fa-fw fab fa-twitter"></i> </a> <a href="https://www.facebook.com/sharer/sharer.php?title=密码学的一些探索之消息认证码 - idlebook&u=https://idlebook.github.io/posts/18/" data-toggle="tooltip" data-placement="top" title="Facebook" target="_blank" rel="noopener" aria-label="Facebook"> <i class="fa-fw fab fa-facebook-square"></i> </a> <a href="https://telegram.me/share?text=密码学的一些探索之消息认证码 - idlebook&url=https://idlebook.github.io/posts/18/" data-toggle="tooltip" data-placement="top" title="Telegram" target="_blank" rel="noopener" aria-label="Telegram"> <i class="fa-fw fab fa-telegram"></i> </a> <i class="fa-fw fas fa-link small" onclick="copyLink()" data-toggle="tooltip" data-placement="top" title="Copy link"></i> </span></div></div></div></div></div><div id="panel-wrapper" class="col-xl-3 pl-2 text-muted topbar-down"><div class="access"><div id="access-lastmod" class="post"> <span>Recent Update</span><ul class="post-content pl-0 pb-1 ml-1 mt-2"><li><a href="/posts/003/">Mac命令行科学上网</a></ul></div><div id="access-tags"> <span>Trending Tags</span><div class="d-flex flex-wrap mt-3 mb-1 mr-3"> <a class="post-tag" href="/tags/%E8%83%BD%E5%B7%A5%E5%B7%A7%E5%8C%A0%E9%9B%86/">能工巧匠集</a> <a class="post-tag" href="/tags/%E7%AE%97%E6%B3%95/">算法</a></div></div></div><div id="toc-wrapper" class="pl-0 pr-4 mb-5"> <span class="pl-3 pt-2 mb-2">Contents</span><nav id="toc" data-toggle="toc"></nav></div></div></div><div class="row"><div class="col-12 col-lg-11 col-xl-8"><div id="post-extend-wrapper" class="pl-1 pr-1 pl-sm-2 pr-sm-2 pl-md-4 pr-md-4"><div id="related-posts" class="mt-5 mb-2 mb-sm-4"><h3 class="pt-2 mt-1 mb-4 ml-1" data-toc-skip>Further Reading</h3><div class="card-deck mb-4"><div class="card"> <a href="/posts/007/"><div class="card-body"> <span class="timeago small" > Oct 15, 2018 <i class="unloaded">2018-10-15T00:00:00+08:00</i> </span><h3 class="pt-0 mt-1 mb-3" data-toc-skip>谈谈iOS的一些优化点</h3><div class="text-muted small"><p> 性能优化 卡顿优化 CPU CPU（Central Processing Unit，中央处理器） 对象的创建和销毁 对象属性的调 布局计算 文本的计算和排版 图片的格式转换和解码 图像的绘制（Core Graphics GPU GPU（Graphics...</p></div></div></a></div><div class="card"> <a href="/posts/17/"><div class="card-body"> <span class="timeago small" > Mar 5, 2019 <i class="unloaded">2019-03-05T00:00:00+08:00</i> </span><h3 class="pt-0 mt-1 mb-3" data-toc-skip>谈谈Websocket,QQ, 微信,这类IMApp应该怎么做</h3><div class="text-muted small"><p> 目录 1.WebSocket使用场景 2.WebSocket诞生由来 3.谈谈WebSocket协议原理 4.WebSocket 和 Socket的区别与联系 5.iOS平台有哪些WebSocket和Socket的开源框架 6.iOS平台如何实现WebSocket协议 一.WebSocket的使用场景 1.社交聊天 最著名的就是微信，QQ，这一类社...</p></div></div></a></div><div class="card"> <a href="/posts/10/"><div class="card-body"> <span class="timeago small" > Aug 2, 2019 <i class="unloaded">2019-08-02T00:00:00+08:00</i> </span><h3 class="pt-0 mt-1 mb-3" data-toc-skip>密码学的一些探索之数字签名</h3><div class="text-muted small"><p> 一、为什么需要数字签名？ 从上一篇文章里面我们知道，消息认证码可以识别篡改或者发送者身份是否被伪装，也就是验证消息的完整性，还可以对消息进行认证。但是消息认证码的缺陷就在于它的共享密钥上面。由于共享密钥的原因，导致无法防止抵赖。 数字签名就是为了解决抵赖的问题的。解决的方法就是让通信双方的共享密钥不同，从密钥上能区分出谁是谁。 二、什么是数字签名？ 数字签名相当于现实...</p></div></div></a></div></div></div><div class="post-navigation d-flex justify-content-between"> <a href="/posts/17/" class="btn btn-outline-primary"><p>谈谈Websocket,QQ, 微信,这类IMApp应该怎么做</p></a> <a href="/posts/10/" class="btn btn-outline-primary"><p>密码学的一些探索之数字签名</p></a></div></div></div></div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lozad/dist/lozad.min.js"></script> <script type="text/javascript"> const imgs = document.querySelectorAll('.post-content img'); const observer = lozad(imgs); observer.observe(); </script><footer class="d-flex w-100 justify-content-center"><div class="d-flex justify-content-between align-items-center"><div class="footer-left"><p class="mb-0"> © 2021 <a href="https://twitter.com/username">idlebook</a>. <span data-toggle="tooltip" data-placement="top" title="Except where otherwise noted, the blog posts on this site are licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) License by the author.">Some rights reserved.</span></p></div><div class="footer-right"><p class="mb-0"> Powered by <a href="https://jekyllrb.com" target="_blank" rel="noopener">Jekyll</a> with <a href="https://github.com/cotes2020/jekyll-theme-chirpy/" target="_blank" rel="noopener">Chirpy</a> theme.</p></div></div></footer></div><div id="search-result-wrapper" class="d-flex justify-content-center unloaded"><div class="col-12 col-xl-11 post-content"><div id="search-hints"><h4 class="text-muted mb-4">Trending Tags</h4><a class="post-tag" href="/tags/%E8%83%BD%E5%B7%A5%E5%B7%A7%E5%8C%A0%E9%9B%86/">能工巧匠集</a> <a class="post-tag" href="/tags/%E7%AE%97%E6%B3%95/">算法</a></div><div id="search-results" class="d-flex flex-wrap justify-content-center text-muted mt-3"></div></div></div></div><div id="mask"></div><a id="back-to-top" href="#" aria-label="back-to-top" class="btn btn-lg btn-box-shadow" role="button"> <i class="fas fa-angle-up"></i> </a> <script src="https://cdn.jsdelivr.net/npm/simple-jekyll-search@1.7.3/dest/simple-jekyll-search.min.js"></script> <script> SimpleJekyllSearch({ searchInput: document.getElementById('search-input'), resultsContainer: document.getElementById('search-results'), json: '/assets/js/data/search.json', searchResultTemplate: '<div class="pl-1 pr-1 pl-sm-2 pr-sm-2 pl-lg-4 pr-lg-4 pl-xl-0 pr-xl-0"> <a href="https://idlebook.github.io{url}">{title}</a><div class="post-meta d-flex flex-column flex-sm-row text-muted mt-1 mb-1"><div class="mr-sm-4"><i class="far fa-folder fa-fw"></i>{categories}</div><div><i class="fa fa-tag fa-fw"></i>{tags}</div></div><p>{snippet}</p></div>', noResultsText: '<p class="mt-5">Oops! No result founds.</p>' }); </script>
