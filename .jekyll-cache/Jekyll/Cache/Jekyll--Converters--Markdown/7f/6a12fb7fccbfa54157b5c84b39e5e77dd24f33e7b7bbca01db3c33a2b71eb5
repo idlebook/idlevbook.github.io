@@ -1,5 +1,0 @@
-I"�<h3 id="cadisplaylinknstimer使用注意">CADisplayLink、NSTimer使用注意</h3>
-<ul>
-  <li>CADisplayLink、NSTimer会对target产生强引用，如果target又对它们产生强引用，那么就会引发循环引用</li>
-</ul>
-:ET
