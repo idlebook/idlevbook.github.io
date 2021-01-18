@@ -136,7 +136,7 @@ defaults:
     values:
       breadcrumb:
         -
-          label: Posts
+          label: 主页
   -
     scope:
       path: tags
